@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nifti-finder"
+version = "0.1.0"
+description = "nifti-finder - Navigate neuroimaging datasets across multiple data structures"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache2.0"}
+authors = [
+    {name = "Petros Koutsouvelis"},
+]
+dependencies = [
+  "pandas>=2.0,<3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "jupyter>=1.0.0",
+]
+test = [
+    "pytest>=6.0.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["nifti_finder*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "serial",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py39"]
