@@ -1,4 +1,4 @@
-"""Utils for nifti finder"""
+"""Path and filesystem helpers"""
 
 from __future__ import annotations
 

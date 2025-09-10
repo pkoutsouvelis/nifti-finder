@@ -1,9 +1,8 @@
-"""Interfaces for file explorer and handler"""
+"""Interface(s) for file explorers"""
 
 from __future__ import annotations
 
 __all__ = [
-    "Filter", 
     "FileExplorer",
     "FilterableFileExplorer",
 ]
@@ -11,15 +10,7 @@ __all__ = [
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-class Filter(ABC):
-    """Interface for filter"""
-    @abstractmethod
-    def filter(self, filepath: Path) -> bool:
-        """Filter a file; return True if the file should be included, False otherwise"""
-        pass
-
-    def __call__(self, filepath: Path) -> bool:
-        return self.filter(filepath)
+from nifti_finder.filters import Filter
 
 class FileExplorer(ABC):
     """Interface for file explorer"""

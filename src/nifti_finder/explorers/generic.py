@@ -1,12 +1,16 @@
-"""File explorer implementations"""
+"""Generic implementation of filterable file explorer"""
 
 from __future__ import annotations
 
+__all__ = [
+    "GenericFilterableFileExplorer",
+]
+
 from pathlib import Path
 
-from nifti_finder.interfaces import FilterableFileExplorer, Filter
-from nifti_finder.utils import get_ext, resolve_path
-
+from nifti_finder.explorers.base import FilterableFileExplorer
+from nifti_finder.filters import Filter
+from nifti_finder.utils import resolve_path
 
 class GenericFilterableFileExplorer(FilterableFileExplorer):
     """Generic implementation of filterable file explorer"""
