@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-from nifti_finder.interfaces import Filter
 from nifti_finder.filters import *
 
 @pytest.fixture(autouse=True)
@@ -102,3 +101,26 @@ class TestIfFileExistsFilter:
     def test_exclude_if_file_exists(self, file_paths):
         filter = ExcludeIfFileExists("file6.nii.gz")
         assert_filter(filter, file_paths, [True, True, True, True, True, True, True])
+
+
+class TestComposeFilter:
+    """Test compose filter"""
+    def test_identity(self, file_paths):
+        filter = ComposeFilter([])
+        assert_filter(filter, file_paths, [True, True, True, True, True, True, True])
+    
+    def test_and(self, file_paths):
+        filter = ComposeFilter([IncludeExtension("nii.gz"), IncludeFilePrefix("file")], logic="AND")
+        assert_filter(filter, file_paths, [False, True, True, False, False, False, False])
+
+    def test_and_w_exclude(self, file_paths):
+        filter = ComposeFilter([IncludeExtension("nii.gz"), ExcludeFilePrefix("file")], logic="AND")
+        assert_filter(filter, file_paths, [False, False, False, True, True, True, True])
+    
+    def test_or(self, file_paths):
+        filter = ComposeFilter([IncludeExtension("nii.gz"), IncludeFilePrefix("file")], logic="OR")
+        assert_filter(filter, file_paths, [True, True, True, True, True, True, True])
+
+    def test_or_w_exclude(self, file_paths):
+        filter = ComposeFilter([IncludeExtension("nii.gz"), ExcludeFilePrefix("file")], logic="OR")
+        assert_filter(filter, file_paths, [False, True, True, True, True, True, True])

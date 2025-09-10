@@ -24,7 +24,7 @@ __all__ = [
 from pathlib import Path
 import re
 
-from nifti_finder.interfaces import Filter
+from nifti_finder.filters.base import Filter
 from nifti_finder.utils import get_ext
 
 
@@ -35,7 +35,7 @@ class IncludeExtension(Filter):
             extension = f".{extension}"
         self._extension = extension
 
-    def filter(self, filepath: Path) -> bool:
+    def __call__(self, filepath: Path, /) -> bool:
         """Filter for files with a specific extension"""
         return get_ext(filepath) == self._extension
 
@@ -45,7 +45,7 @@ class IncludeFileSuffix(Filter):
     def __init__(self, suffix: str):
         self._suffix = suffix
 
-    def filter(self, filepath: Path) -> bool:
+    def __call__(self, filepath: Path, /) -> bool:
         name_only = filepath.name.removesuffix(get_ext(filepath))
         return name_only.endswith(self._suffix)
 
@@ -55,7 +55,7 @@ class IncludeFilePrefix(Filter):
     def __init__(self, prefix: str):
         self._prefix = prefix
 
-    def filter(self, filepath: Path) -> bool:
+    def __call__(self, filepath: Path, /) -> bool:
         return filepath.name.startswith(self._prefix)
 
 
@@ -64,7 +64,7 @@ class IncludeFileRegex(Filter):
     def __init__(self, regex: str):
         self._regex = regex
 
-    def filter(self, filepath: Path) -> bool:
+    def __call__(self, filepath: Path, /) -> bool:
         return re.match(self._regex, filepath.name) is not None
 
 
@@ -73,7 +73,7 @@ class IncludeDirectorySuffix(Filter):
     def __init__(self, suffix: str):
         self._suffix = suffix
 
-    def filter(self, filepath: Path) -> bool:
+    def __call__(self, filepath: Path, /) -> bool:
         dirs = list(filepath.parents)
         if len(dirs) == 0:
             return False
@@ -85,7 +85,7 @@ class IncludeDirectoryPrefix(Filter):
     def __init__(self, prefix: str):
         self._prefix = prefix
 
-    def filter(self, filepath: Path) -> bool:
+    def __call__(self, filepath: Path, /) -> bool:
         dirs = list(filepath.parents)
         if len(dirs) == 0:
             return False
@@ -97,7 +97,7 @@ class IncludeDirectoryRegex(Filter):
     def __init__(self, regex: str):
         self._regex = regex
 
-    def filter(self, filepath: Path) -> bool:
+    def __call__(self, filepath: Path, /) -> bool:
         dirs = list(filepath.parents)
         if len(dirs) == 0:
             return False
@@ -110,7 +110,7 @@ class IncludeIfFileExists(Filter):
         self._filename = filename
         self._search_in = search_in
 
-    def filter(self, filepath: Path) -> bool:
+    def __call__(self, filepath: Path, /) -> bool:
         if self._search_in is None:
             search_in = filepath.parent
         else:
@@ -120,47 +120,47 @@ class IncludeIfFileExists(Filter):
 
 class ExcludeExtension(IncludeExtension):
     """Exclude files with a specific extension"""
-    def filter(self, filepath: Path) -> bool:
-        return not super().filter(filepath)
+    def __call__(self, filepath: Path, /) -> bool:
+        return not super().__call__(filepath)
 
 
 class ExcludeFileSuffix(IncludeFileSuffix):
     """Exclude files with a specific suffix"""
-    def filter(self, filepath: Path) -> bool:
-        return not super().filter(filepath)
+    def __call__(self, filepath: Path, /) -> bool:
+        return not super().__call__(filepath)
 
 
 class ExcludeFilePrefix(IncludeFilePrefix):
     """Exclude files with a specific prefix"""
-    def filter(self, filepath: Path) -> bool:
-        return not super().filter(filepath)
+    def __call__(self, filepath: Path, /) -> bool:
+        return not super().__call__(filepath)
 
 
 class ExcludeFileRegex(IncludeFileRegex):
     """Exclude files with a specific regex"""
-    def filter(self, filepath: Path) -> bool:
-        return not super().filter(filepath)
+    def __call__(self, filepath: Path, /) -> bool:
+        return not super().__call__(filepath)
 
 
 class ExcludeDirectorySuffix(IncludeDirectorySuffix):
     """Exclude directories with a specific suffix"""
-    def filter(self, filepath: Path) -> bool:
-        return not super().filter(filepath)
+    def __call__(self, filepath: Path, /) -> bool:
+        return not super().__call__(filepath)
 
 
 class ExcludeDirectoryPrefix(IncludeDirectoryPrefix):
     """Exclude directories with a specific prefix"""
-    def filter(self, filepath: Path) -> bool:
-        return not super().filter(filepath)
+    def __call__(self, filepath: Path, /) -> bool:
+        return not super().__call__(filepath)
 
 
 class ExcludeDirectoryRegex(IncludeDirectoryRegex):
     """Exclude directories with a specific regex"""
-    def filter(self, filepath: Path) -> bool:
-        return not super().filter(filepath)
+    def __call__(self, filepath: Path, /) -> bool:
+        return not super().__call__(filepath)
 
 
 class ExcludeIfFileExists(IncludeIfFileExists):
     """Exclude files if they are in the same directory as a specific file"""
-    def filter(self, filepath: Path) -> bool:
-        return not super().filter(filepath)
+    def __call__(self, filepath: Path, /) -> bool:
+        return not super().__call__(filepath)
