@@ -2,27 +2,21 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from nifti_finder.filters import *
+from tests.utils import assert_filter
 
 @pytest.fixture(autouse=True)
 def mock_iterdir(monkeypatch, file_paths):
-    def mock_iterdir(self, *args, **kwargs):
+    def _dummy_call(self, *args, **kwargs):
         out_paths = []
         for f in file_paths:
             if f.parent == self:
                 out_paths.append(f.parent / "prefix_file6.nii.gz")
         return out_paths
-    monkeypatch.setattr("pathlib.Path.iterdir", mock_iterdir)
+    monkeypatch.setattr("pathlib.Path.iterdir", _dummy_call)
 
-def assert_filter(filter: Filter, file_paths: list[Path], expected: list[bool]):
-    outs = []
-    for f in file_paths:
-        outs.append(filter.filter(f))
-    assert outs == expected
 
 class TestExtensionFilter:
     """Test extension filter"""
@@ -101,26 +95,3 @@ class TestIfFileExistsFilter:
     def test_exclude_if_file_exists(self, file_paths):
         filter = ExcludeIfFileExists("file6.nii.gz")
         assert_filter(filter, file_paths, [True, True, True, True, True, True, True])
-
-
-class TestComposeFilter:
-    """Test compose filter"""
-    def test_identity(self, file_paths):
-        filter = ComposeFilter([])
-        assert_filter(filter, file_paths, [True, True, True, True, True, True, True])
-    
-    def test_and(self, file_paths):
-        filter = ComposeFilter([IncludeExtension("nii.gz"), IncludeFilePrefix("file")], logic="AND")
-        assert_filter(filter, file_paths, [False, True, True, False, False, False, False])
-
-    def test_and_w_exclude(self, file_paths):
-        filter = ComposeFilter([IncludeExtension("nii.gz"), ExcludeFilePrefix("file")], logic="AND")
-        assert_filter(filter, file_paths, [False, False, False, True, True, True, True])
-    
-    def test_or(self, file_paths):
-        filter = ComposeFilter([IncludeExtension("nii.gz"), IncludeFilePrefix("file")], logic="OR")
-        assert_filter(filter, file_paths, [True, True, True, True, True, True, True])
-
-    def test_or_w_exclude(self, file_paths):
-        filter = ComposeFilter([IncludeExtension("nii.gz"), ExcludeFilePrefix("file")], logic="OR")
-        assert_filter(filter, file_paths, [False, True, True, True, True, True, True])

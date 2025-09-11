@@ -1,17 +1,28 @@
-"""Interface for filter"""
+"""Interfaces and base classes for filepath filtering"""
 
 from __future__ import annotations
 
 __all__ = [
     "Filter",
+    "Logic",
 ]
+from enum import Enum
 from abc import ABC, abstractmethod
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+
+class Logic(str, Enum):
+    AND = "AND"
+    OR = "OR"
+
 
 class Filter(ABC):
-    """Interface for filter"""
+    """Interface for any filepath filter"""
     @abstractmethod
     def __call__(self, filepath: Path, /) -> bool: ...
 
-    def filter(self, filepath: Path) -> bool:  # pragma: no cover
+    def filter(self, filepath: Path) -> bool:
         return self(filepath)

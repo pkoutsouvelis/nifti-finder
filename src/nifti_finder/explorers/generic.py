@@ -1,4 +1,4 @@
-"""Generic implementation of filterable file explorer"""
+"""Generic file explorer implementations"""
 
 from __future__ import annotations
 
@@ -7,53 +7,47 @@ __all__ = [
 ]
 
 from pathlib import Path
+from typing import Iterator
 
 from nifti_finder.explorers.base import FilterableFileExplorer
-from nifti_finder.filters import Filter
 from nifti_finder.utils import resolve_path
 
+
 class GenericFilterableFileExplorer(FilterableFileExplorer):
-    """Generic implementation of filterable file explorer"""
-    def __init__(self, root_dir: str | Path):
-        self._root = resolve_path(root_dir)
-        self._filters: list[Filter] = []
+    """
+    Concrete file explorer with filtering support.
 
-    def root(self) -> Path:
-        """Get the root directory"""
-        return self._root
+    Finds all files in a directory and applies a cached composed filter to each filepath.
 
-    def filters(self) -> list[Filter]:
-        """Get the filters"""
-        return self._filters
+    Example use-cases: 
+    A. Nifti-file ('.nii.gz' or '.nii') finder for a generic dataset:
+    ```
+    >>> explorer = GenericFilterableFileExplorer(
+    ...     filters=[IncludeExtension("nii.gz"), IncludeExtension("nii")],
+    ...     logic="OR",
+    ... )
+    >>> for path in explorer.scan("/path/to/dataset"):
+    ...     print(path)
+    ```
+    B. Find T1w files ('.nii.gz' or '.nii') in the `anat` directory of a BIDS-style dataset:
+    ```
+    >>> explorer = GenericFilterableFileExplorer(
+    ...     filters=[IncludeDirectorySuffix("anat"), IncludeFileSuffix("T1w")],
+    ...     logic="AND",
+    ... )
+    >>> explorer.add_filters(
+    ...     ComposeFilter([IncludeExtension("nii.gz"), IncludeExtension("nii")], logic="OR")
+    ... )
+    >>> for path in explorer.scan("/path/to/dataset"):
+    ...     print(path)
+    ```
+    """
+    def scan(self, root_dir: Path | str, /) -> Iterator[Path]:
+        root = resolve_path(root_dir)
+        if not root.is_dir():
+            raise NotADirectoryError(f"{root} is not a valid directory")
 
-    def add_filters(self, filters: Filter | list[Filter]):
-        """Add filter(s)"""
-        if isinstance(filters, list):
-            for f in filters:
-                self.add_filters(f)
-            return
-
-        if not isinstance(filters, Filter):
-            raise ValueError("Filter(s) must be an instance of nifti_finder.Filter or a list "
-                             "of nifti_finder.Filter objects")
-        self._filters.append(filters)
-
-    def remove_filters(self, filters: Filter | list[Filter]):
-        """Remove filter(s)"""
-        if isinstance(filters, list):
-            for f in filters:
-                self.remove_filters(f)
-            return
-
-        if not isinstance(filters, Filter):
-            raise ValueError("Filter(s) must be an instance of nifti_finder.Filter or a list "
-                             "of nifti_finder.Filter objects")
-        self._filters.remove(filters)
-
-    def clear_filters(self):
-        """Clear all filters"""
-        self._filters = []
-    
-    def apply_filters(self, files: Path) -> bool:
-        """Apply the filters to a list of files"""
-        return all(filter.filter(files) for filter in self._filters)
+        for path in root.rglob("*"):
+            if path.is_file():
+                if self.apply_filters(path):
+                    yield path
