@@ -27,16 +27,18 @@ class BasicFileExplorer(FileExplorer):
     --------
     A) Find all nifti files ('.nii.gz' or '.nii') in any dataset, regardless the structure:
        - Specify `pattern` to match nifti files
+
     ```python
-    >>> explorer = GenericFileExplorer(pattern="*.nii*")
+    >>> explorer = BasicFileExplorer(pattern="*.nii*")
     >>> for path in explorer.scan("/path/to/dataset"):
     ...     preprocess(path)
 
     ```
     B) Find all raw T1w MR images ('.nii.gz' or '.nii') in the `anat` directory of a BIDS-style dataset:
        - Specify `pattern` to match BIDS-style T1w MR images
+
     ```python
-    >>> explorer = GenericFileExplorer(pattern="/sub-*/**/anat/*T1w.nii*")
+    >>> explorer = BasicFileExplorer(pattern="sub-*/**/anat/*T1w.nii*")
     >>> for path in explorer.scan("/path/to/dataset"):
     ...     preprocess(path)
     ```
@@ -52,7 +54,7 @@ class BasicFileExplorer(FileExplorer):
         for pattern in self._patterns:
             for path in root.rglob(pattern):
                 if path.is_file():
-                        yield path
+                    yield path
 
 
 class TwoStageFileExplorer(FileExplorer):
@@ -68,8 +70,9 @@ class TwoStageFileExplorer(FileExplorer):
        - Specify `stage_1_pattern` to match subject-level directories
        - Specify `stage_2_pattern` to match BIDS-style T1w MR images
        - Set `progress` and `desc` to track progress
+
     ```python
-    >>> explorer = TwoStageFileExplorer(stage_1_pattern="sub-*", stage_2_pattern="*/anat/*.nii*")
+    >>> explorer = TwoStageFileExplorer(stage_1_pattern="sub-*", stage_2_pattern="**/anat/*.nii*")
     >>> for path in explorer.scan("/path/to/dataset", progress=True, desc="Subjects"):
     ...     preprocess(path)
     >>> Subjects:  50%|███████████████████▌               | 30/60 [00:15<00:15,  2.00 it/s]
@@ -79,6 +82,7 @@ class TwoStageFileExplorer(FileExplorer):
        - Specify `stage_1_pattern` to match dataset-level directories; e.g., `OpenNeuro-ds001`
        - Specify `stage_2_pattern` to match BIDS-style T1w MR images
        - Set `progress` and `desc` to track progress
+
     ```python
     >>> explorer = TwoStageFileExplorer(stage_1_pattern="OpenNeuro-ds*", stage_2_pattern="sub-*/**/anat/*.nii*")
     >>> for path in explorer.scan("/path/to/datasets", progress=True, desc="Datasets"):
@@ -135,7 +139,7 @@ class AllPurposeFileExplorer(BasicFileExplorer, FilterableMixin, MaterializeMixi
     
     Note:
         For faster exploration, prioritize `patterns` for filtering by name; apply subsequent filters
-        only to the narrowed down results. Suppports multiple `patterns`, but will traverse the
+        only to the narrowed down results. Supports multiple `patterns`, but will traverse the
         directory once per pattern, which can be slow on large datasets. 
         The best performance is expected with a single pattern + filters.
     
