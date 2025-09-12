@@ -152,7 +152,7 @@ class IncludeIfFileExists(Filter):
     """
     filename_pattern: str
     search_in: str = "--"
-    mirror_relative_to: Path | None = None
+    mirror_relative_to: Path | str | None = None
 
     def __call__(self, filepath: Path, /) -> bool:
         fp = filepath.resolve()
