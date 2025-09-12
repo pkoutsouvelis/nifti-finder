@@ -7,14 +7,16 @@ __all__ = [
     "FilterableMixin",
 ]
 
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 from collections.abc import Sequence
 from pathlib import Path
 
 from nifti_finder.filters.base import Filter, Logic
 from nifti_finder.filters.compose import ComposeFilter
+from nifti_finder.utils import ensure_seq
 
 
+@runtime_checkable
 class Filterable(Protocol):
     """Protocol for any object that can apply filters to a filepath."""
     def filters(self) -> tuple[Filter, ...]: ...
@@ -60,14 +62,12 @@ class FilterableMixin:
             self.add_filters(filters)
         self._rebuild_composed()
 
+    @property
     def filters(self) -> tuple[Filter, ...]:
-        return self._composed.filters
+        return tuple(self._filters)
 
     def add_filters(self, filters: Filter | Sequence[Filter], /) -> None:
-        if isinstance(filters, Sequence) and not isinstance(filters, Filter):
-            seq = list(filters)
-        else:
-            seq = [filters]
+        seq = list(ensure_seq(filters))
         self._filters.extend(seq)
         self._rebuild_composed()
     
@@ -76,12 +76,15 @@ class FilterableMixin:
         which: Filter | int | Sequence[Filter | int],
         /
     ) -> None:
-        seq = tuple(which) if isinstance(which, Sequence) else (which,)
+        seq = tuple(ensure_seq(which))
         for f in seq:
             if isinstance(f, int):
                 self._filters.pop(f)
             elif isinstance(f, Filter):
-                self._filters.remove(f)
+                try:
+                    self._filters.remove(f)
+                except ValueError:
+                    continue
             else:
                 raise TypeError(f"Invalid entry in `which`: expected Filter or int, "
                                 f"got {type(f).__name__}")

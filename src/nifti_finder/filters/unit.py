@@ -26,7 +26,7 @@ from dataclasses import dataclass
 import re
 
 from nifti_finder.filters.base import Filter
-from nifti_finder.utils import get_ext
+from nifti_finder.utils import get_ext, resolve_path
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,16 +109,77 @@ class IncludeDirectoryRegex(Filter):
 
 @dataclass(frozen=True, slots=True)
 class IncludeIfFileExists(Filter):
-    """Include files if they are in the same directory as a specific file"""
-    filename: str
-    search_in: Path | None = None
+    """
+    Include files if a glob-matching file exists in a related directory.
+
+    Example use-cases:
+    A. Include a file that contains a brain mask in the same directory:
+    ```
+    >>> IncludeIfFileExists(filename_pattern="*mask*")
+    >>> filter("/data/sub-1/ses-1/t1.nii.gz")
+    True
+    ```
+    B. Include file only if it contains a segmentation mask in a different directory; 
+       e.g., assume an input file '/data/sub-1/ses-1/t1.nii.gz' with segmentation mask 
+             in '/labels/sub-1/ses-1/seg.nii.gz':
+    ```
+    >>> filter = IncludeIfFileExists(filename_pattern="*seg*", search_in="/labels--", mirror_relative_to="/data")
+    >>> filter("/data/sub-1/ses-1/t1.nii.gz")
+    True
+    ```
+
+    Args:
+        filename_pattern:
+            Glob applied to filenames in the target dir (e.g., '*seg*', '*.json').
+            Special: '--' = use the current file's name.
+
+        search_in (mini-DSL):
+            '--'            → same directory as the file
+            '--<relpath>'   → (file.parent / <relpath>)            e.g. '--../labels'
+            '<abs path>'    → fixed absolute directory              e.g. '/tmp/labels'
+            '<mirror_root>--' → mirror under <mirror_root>; requires mirror_relative_to
+
+        mirror_relative_to:
+            The source root to strip when mirroring (e.g., Path('/data')).
+
+            Example: file '/data/sub-1/ses-1/t1.nii.gz' + search_in=' /labels-- '
+                    → target '/labels/sub-1/ses-1'
+
+            Note: Default `FileExplorer` implementations assume no fixed source root. Use this mode only
+                when sure that the source root will always contain the `mirror_relative_to` directory.
+                Otherwise the filter will keep silently failing and returning False.
+    
+    """
+    filename_pattern: str
+    search_in: str = "--"
+    mirror_relative_to: Path | None = None
 
     def __call__(self, filepath: Path, /) -> bool:
-        if self.search_in is None:
-            search_in = filepath.parent
+        fp = filepath.resolve()
+        si = self.search_in
+
+        if si == "--":
+            target_dir = fp.parent
+        elif si.startswith("--"):
+            target_dir = resolve_path(fp.parent / si.removeprefix("--"))
+        elif si.endswith("--"):
+            mirror_root = resolve_path(si.removesuffix("--"))
+            src_root = resolve_path(self.mirror_relative_to or Path("/"))
+            try:
+                rel = fp.parent.relative_to(src_root)
+            except ValueError:
+                return False
+            target_dir = (mirror_root / rel)
         else:
-            search_in = self.search_in
-        return any(f.name == self.filename for f in search_in.iterdir())
+            p = Path(si)
+            target_dir = p if p.is_absolute() else resolve_path(fp.parent / p)
+
+        pattern = fp.name if self.filename_pattern == "--" else self.filename_pattern
+
+        try:
+            return any(p.is_file() for p in target_dir.glob(pattern))
+        except FileNotFoundError:
+            return False
 
 
 @dataclass(frozen=True, init=False)

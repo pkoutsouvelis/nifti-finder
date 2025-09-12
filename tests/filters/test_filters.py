@@ -3,19 +3,10 @@
 from __future__ import annotations
 
 import pytest
+from pathlib import Path
 
 from nifti_finder.filters import *
 from tests.utils import assert_filter
-
-@pytest.fixture(autouse=True)
-def mock_iterdir(monkeypatch, file_paths):
-    def _dummy_call(self, *args, **kwargs):
-        out_paths = []
-        for f in file_paths:
-            if f.parent == self:
-                out_paths.append(f.parent / "prefix_file6.nii.gz")
-        return out_paths
-    monkeypatch.setattr("pathlib.Path.iterdir", _dummy_call)
 
 
 class TestExtensionFilter:
@@ -88,10 +79,66 @@ class TestRegexFilter:
 
 class TestIfFileExistsFilter:
     """Test if file exists filter"""
-    def test_include_if_file_exists(self, file_paths):
-        filter = IncludeIfFileExists("prefix_file6.nii.gz")
-        assert_filter(filter, file_paths, [True, True, True, True, True, True, True])
+    @pytest.fixture
+    def fs(self, tmp_path: Path) -> dict[str, Path]:
+        """
+        Create a tiny BIDS-like tree:
+
+        /data/sub-1/ses-1/t1.nii.gz
+        /data/sub-1/ses-1/other.json
+        /labels/sub-1/ses-1/t1_seg.nii.gz
+        /data/sub-2/ses-1/t1.nii.gz            (no label)
+        """
+        data = tmp_path / "data"
+        labels = tmp_path / "labels"
+
+        (data / "sub-1" / "ses-1").mkdir(parents=True)
+        (data / "sub-1" / "ses-1" / "labels").mkdir(parents=True)
+        (data / "sub-2" / "ses-1").mkdir(parents=True)
+        (labels / "sub-1" / "ses-1").mkdir(parents=True)
+        (labels / "sub-2" / "ses-1").mkdir(parents=True)
+
+        (data / "sub-1" / "ses-1" / "t1.nii.gz").touch()
+        (data / "sub-1" / "ses-1" / "other.json").touch()
+        (data / "sub-2" / "ses-1" / "t1.nii.gz").touch()
+        (data / "sub-1" / "ses-1" / "labels" / "t1_seg.nii.gz").touch()
+        (labels / "sub-2" / "ses-1" / "t1_seg.nii.gz").touch()
+
+        return {
+            "data_root": data,
+            "labels_root": labels,
+            "t1_sub1": data / "sub-1" / "ses-1" / "t1.nii.gz",
+            "t1_sub2": data / "sub-2" / "ses-1" / "t1.nii.gz",
+        }
+
+    def test_no_op(self, fs):
+        filter = IncludeIfFileExists(filename_pattern="--")
+        assert_filter(filter, [fs["t1_sub1"], fs["t1_sub2"]], [True, True])
     
-    def test_exclude_if_file_exists(self, file_paths):
-        filter = ExcludeIfFileExists("file6.nii.gz")
-        assert_filter(filter, file_paths, [True, True, True, True, True, True, True])
+    def test_include_if_file_exists_in_same_dir(self, fs):
+        filter = IncludeIfFileExists(filename_pattern="*.json")
+        assert_filter(filter, [fs["t1_sub1"], fs["t1_sub2"]], [True, False])
+
+    def test_include_if_file_exists_in_mirror_dir(self, fs):
+        filter = IncludeIfFileExists(filename_pattern="*seg*", search_in=f"{fs['labels_root']}--", 
+                                     mirror_relative_to=fs["data_root"])
+        assert_filter(filter, [fs["t1_sub1"], fs["t1_sub2"]], [False, True])
+    
+    def test_include_if_file_exists_in_absolute_dir(self, fs):
+        filter = IncludeIfFileExists(filename_pattern="--", search_in=f"{fs['labels_root'] / 'sub-2' / 'ses-1'}")
+        assert_filter(filter, [fs["data_root"] / "sub-1" / "ses-1 / labels" / "t1_seg.nii.gz"], [True])
+
+    def test_include_if_file_exists_in_relative_dir(self, fs):
+        filter = IncludeIfFileExists(filename_pattern="*seg*", search_in=f"--labels/")
+        assert_filter(filter, [fs["t1_sub1"], fs["t1_sub2"]], [True, False])
+
+    def test_exclude_if_file_exists_in_same_dir(self, fs):
+        filter = ExcludeIfFileExists(filename_pattern="*.json")
+        assert_filter(filter, [fs["t1_sub1"], fs["t1_sub2"]], [False, True])
+    
+    def test_exclude_if_file_exists_in_mirror_dir(self, fs):
+        filter = ExcludeIfFileExists(filename_pattern="*seg*", search_in=f"{fs['labels_root']}--", 
+                                     mirror_relative_to=fs["data_root"])
+        assert_filter(filter, [fs["t1_sub1"], fs["t1_sub2"]], [True, False])
+
+    
