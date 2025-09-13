@@ -36,8 +36,8 @@ from nifti_finder.filters import ExcludeFileSuffix
 from your_package import preprocess
 
 explorer = NiftiExplorer(
-    stage_1_pattern="sub-*",
-    stage_2_pattern="**/anat/*T1w.nii*",
+    stage_1_pattern="sub-*",              # level to compute progress (e.g., root/sub-*/...)
+    stage_2_pattern="**/anat/*T1w.nii*",  # rest (e.g., ses-*/anat/T1w.nii.gz)
 )
 
 for path in explorer.scan("/path/to/dataset", progress=True, desc="Subjects"):
