@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "nifti-finder"
 version = "1.0.0"
-description = "nifti-finder - Navigate neuroimaging datasets across multiple data structures"
+description = "Flexible file explorers and filters for navigating neuroimaging datasets and beyond."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
