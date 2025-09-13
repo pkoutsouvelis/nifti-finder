@@ -13,7 +13,7 @@ pip install nifti-finder
 pip install -e .
 ```
 
-### Quickstart
+### Example usage
 
 #### Explore NIfTI files with nested structure
 
@@ -38,7 +38,6 @@ from your_package import preprocess
 explorer = NiftiExplorer(
     stage_1_pattern="sub-*",
     stage_2_pattern="**/anat/*T1w.nii*",
-    filters=[ExcludeFileSuffix("preprocessed")],
 )
 
 for path in explorer.scan("/path/to/dataset", progress=True, desc="Subjects"):
@@ -76,22 +75,21 @@ for path in explorer.scan("/path/to/dataset"):
     preprocess(path)
 ```
 
-#### Use with non-NIfTI files (e.g., JSON)
+### Extra functionality
 
-`NiftiExplorer` works for any file types by changing patterns:
+#### Use with non-NIfTI files (e.g., JSON)
 
 ```python
 from nifti_finder import NiftiExplorer, AllPurposeFileExplorer
 
-# Nested exploration for JSON files
-nx = NiftiExplorer(stage_1_pattern="sub-*", stage_2_pattern="**/*.json")
-for p in nx.scan("/path/to/bids", progress=True, desc="Subjects"):
+explorer = NiftiExplorer(stage_1_pattern="sub-*", stage_2_pattern="**/*.json")
+for p in explorer.scan("/path/to/bids", progress=True, desc="Subjects"):
     print(p)
 ```
 
-Supports multiple patterns and filters, but will traverse once per pattern.
+Explorers support multiple patterns and filters, but will traverse once per pattern.
 
-#### AllPurposeFileExplorer
+#### General-purpose exploration
 
 If you don’t want to assume any nested (subject/... or dataset/subject/...) hierarchy, use `AllPurposeFileExplorer` for flexible scanning.
 
@@ -105,7 +103,7 @@ for path in explorer.scan("/path/to/dataset"):
 ```
 
 #### Materializing Results
-Both `NiftiExplorer` and `AllPurposeExplorer` provides convenience methods to turn the streaming output of scan() into concrete Python data structures.
+Both `NiftiExplorer` and `AllPurposeExplorer` provide convenience methods to turn the streaming output of scan() into concrete Python data structures.
 
 This is useful when you want:
 - A list of paths (with optional sorting, deduplication, or limiting)
@@ -121,9 +119,9 @@ explorer = NiftiExplorer(stage_1_pattern="sub-*", stage_2_pattern="**/anat/*T1w.
 paths = explorer.list("/path/to/dataset", sort=True, unique=True)
 ```
 
-### Filtering
+#### Filtering
 
-Specify include/exclude filters to refine results.
+Both `NiftiExplorer` and `AllPurposeExplorer` allow include/exclude filters to refine results.
 
 ```python
 from nifti_finder.explorers import AllPurposeFileExplorer
