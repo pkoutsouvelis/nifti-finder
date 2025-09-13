@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,20 +8,48 @@ version = "0.1.0"
 description = "nifti-finder - Navigate neuroimaging datasets across multiple data structures"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "Apache2.0"}
+license = { text = "Apache-2.0" }
 authors = [
     {name = "Petros Koutsouvelis"},
 ]
 dependencies = [
   "tqdm>=4.66,<5",
 ]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Image Processing",
+  "Topic :: Utilities",
+]
+keywords = [
+    "nifti",
+    "bids",
+    "neuroimaging",
+    "file system",
+    "data discovery",
+]
+readme = "README.md"
 
 [project.optional-dependencies]
 dev = [
-    "jupyter>=1.0.0",
+  "pytest>=7.0",
+  "pytest-cov",
+  "ruff",
+  "mypy",
+  "build",
+  "twine",
+  "jupyter>=1.0.0",
 ]
 test = [
-    "pytest>=6.0.0",
+  "pytest>=7.0",
+  "pytest-cov",
 ]
 
 [tool.setuptools]
@@ -40,7 +68,7 @@ markers = [
 
 [tool.black]
 line-length = 88
-target-version = ["py39"]
+target-version = ["py310"]
 
 [project.urls]
 Homepage = "https://github.com/pkoutsouvelis/nifti-finder"
