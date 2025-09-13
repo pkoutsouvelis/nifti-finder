@@ -33,19 +33,19 @@ class FilterableMixin:
     Drop-in mixin for any object that can apply filters to a filepath.
 
     Can pass a single filter, a sequence of filters, or a mix of both, which get
-    applied as a cached composed filter, with `AND` or `OR` logic.
+    applied as a cached composed filter, with 'AND' or 'OR' logic.
 
     Example use-case to make a class filterable with 'AND' combination logic:
-    ```
+    ```python
     >>> class MyObject(FilterableMixin):
     ...     def __init__(self, filters: Filter | Sequence[Filter] | None = None, logic: Logic | str = Logic.AND):
     ...         super().__init__(filters, logic)
-    ...     def apply_filters(self, filepath: Path, /) -> bool:
+    ...     def apply_filters(self, filepath: Path | str, /) -> bool:
     ...         return self._composed(filepath)
 
     >>> my_object = MyObject()
     >>> my_object.add_filters([IncludeExtension("nii.gz")])
-    >>> my_object.apply_filters(Path("path/to/file.nii.gz"))
+    >>> my_object.apply_filters("path/to/file.nii.gz")
     True
     ```
     """
@@ -56,6 +56,11 @@ class FilterableMixin:
         filters: Filter | Sequence[Filter] | None = None,
         logic: Logic | str = Logic.AND
     ):
+        """
+        Args:
+            filters (Filter | Sequence[Filter], optional): Filters to apply. Defaults to None.
+            logic (Logic | str): Logic to apply to the filters. Defaults to 'AND'.
+        """
         self._filters: list[Filter] = []
         self._logic = logic
         if filters is not None:
@@ -76,6 +81,14 @@ class FilterableMixin:
         which: Filter | int | Sequence[Filter | int],
         /
     ) -> None:
+        """
+        Remove filters from the object.
+
+        Can remove a single filter, a sequence of filters, or a mix of both, either by index or instance.
+
+        Args:
+            which (Filter | int | Sequence[Filter | int]): Filters to remove.
+        """
         seq = tuple(ensure_seq(which))
         for f in seq:
             if isinstance(f, int):
@@ -94,7 +107,7 @@ class FilterableMixin:
         self._filters.clear()
         self._rebuild_composed()
 
-    def apply_filters(self, filepath: Path, /) -> bool:
+    def apply_filters(self, filepath: Path | str, /) -> bool:
         return self._composed(filepath)
 
     def _rebuild_composed(self) -> None:

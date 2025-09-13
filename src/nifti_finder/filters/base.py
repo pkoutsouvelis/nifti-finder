@@ -22,7 +22,7 @@ class Logic(str, Enum):
 class Filter(ABC):
     """Interface for any filepath filter"""
     @abstractmethod
-    def __call__(self, filepath: Path, /) -> bool: ...
+    def __call__(self, filepath: Path | str, /) -> bool: ...
 
-    def filter(self, filepath: Path) -> bool:
+    def filter(self, filepath: Path | str, /) -> bool:
         return self(filepath)

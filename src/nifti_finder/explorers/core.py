@@ -13,9 +13,9 @@ from pathlib import Path
 from typing import Iterator
 from collections.abc import Sequence
 
-from nifti_finder.explorers.base import FileExplorer, FilterableMixin
+from nifti_finder.explorers.base import FileExplorer
 from nifti_finder.explorers.mixins import MaterializeMixin
-from nifti_finder.filters import Filter, Logic
+from nifti_finder.filters import Filter, Logic, FilterableMixin
 from nifti_finder.utils import resolve_path, ensure_seq
 
 
@@ -32,8 +32,8 @@ class BasicFileExplorer(FileExplorer):
     >>> explorer = BasicFileExplorer(pattern="*.nii*")
     >>> for path in explorer.scan("/path/to/dataset"):
     ...     preprocess(path)
-
     ```
+
     B) Find all raw T1w MR images ('.nii.gz' or '.nii') in the `anat` directory of a BIDS-style dataset:
        - Specify `pattern` to match BIDS-style T1w MR images
 
@@ -44,9 +44,19 @@ class BasicFileExplorer(FileExplorer):
     ```
     """
     def __init__(self, *, pattern: str | Sequence[str] = "*"):
+        """
+        Args:
+            pattern (str | Sequence[str]): Filename pattern to match. Defaults to '*'; i.e., 'any'.
+        """
         self._patterns = ensure_seq(pattern)
 
     def scan(self, root_dir: Path | str, /) -> Iterator[Path]:
+        """
+        Scan the directory for files matching the pattern.
+
+        Args:
+            root_dir (Path | str): The root directory to scan.
+        """
         root = resolve_path(root_dir)
         if not root.is_dir():
             raise NotADirectoryError(f"{root} is not a valid directory")
@@ -96,6 +106,13 @@ class TwoStageFileExplorer(FileExplorer):
         stage_1_pattern: str | Sequence[str] = "*",
         stage_2_pattern: str | Sequence[str] = "*",
     ):
+        """
+        Args:
+            stage_1_pattern (str | Sequence[str]): Pattern to match stage 1 directories. 
+                Defaults to '*'; i.e., 'any'.
+            stage_2_pattern (str | Sequence[str]): Pattern to match stage 2 files. 
+                Defaults to '*'; i.e., 'any'.
+        """
         self._stage_1_patterns = ensure_seq(stage_1_pattern)
         self._stage_2_patterns = ensure_seq(stage_2_pattern)
 
@@ -107,7 +124,15 @@ class TwoStageFileExplorer(FileExplorer):
         progress: bool = False,
         **tqdm_kw,
     ) -> Iterator[Path]:
-        """Scan dataset with two-stage file discovery to track progress."""
+        """
+        Scan dataset with two-stage file discovery to track progress.
+
+        Args:
+            root_dir (Path | str): The root directory to scan.
+            progress (bool): Whether to track progress. Defaults to False.
+            **tqdm_kw: Additional keyword arguments to pass to `tqdm`. Most common
+                are `total`, and `desc`.
+        """
         root = resolve_path(root_dir)
         if not root.is_dir():
             raise NotADirectoryError(f"{root} is not a valid directory")
@@ -147,6 +172,7 @@ class AllPurposeFileExplorer(BasicFileExplorer, FilterableMixin, MaterializeMixi
     --------
     A) Find all nifti files ('.nii.gz' or '.nii') in any dataset, regardless the structure:
        - Specify `pattern` to match nifti files
+
     ```python
     >>> explorer = AllPurposeFileExplorer(pattern="*.nii*")
     >>> for path in explorer.scan("/path/to/dataset"):
@@ -155,6 +181,7 @@ class AllPurposeFileExplorer(BasicFileExplorer, FilterableMixin, MaterializeMixi
 
     B) Find T1w MR images ('.nii.gz' or '.nii') in the `anat` directory of a BIDS-style dataset:
        - Specify `pattern` to match BIDS-style T1w MR images
+
     ```python
     >>> explorer = AllPurposeFileExplorer(pattern="/sub-*/**/anat/*T1w.nii*",)
     >>> for path in explorer.scan("/path/to/dataset"):
@@ -164,6 +191,7 @@ class AllPurposeFileExplorer(BasicFileExplorer, FilterableMixin, MaterializeMixi
     C) Same as B, but skip files without a segmentation mask:
        - Specify `pattern` to match BIDS-style T1w MR images
        - Specify `filters` to exclude files without a segmentation mask
+
     ```python
     >>> explorer = AllPurposeFileExplorer(
     ...     pattern="/sub-*/**/anat/*T1w.nii*",
@@ -173,6 +201,7 @@ class AllPurposeFileExplorer(BasicFileExplorer, FilterableMixin, MaterializeMixi
     ```
 
     D) Get materialized results:
+
     ```python
     >>> all_paths = explorer.list("/path/to/dataset")
     >>> any_path = explorer.first("/path/to/dataset")
@@ -187,10 +216,22 @@ class AllPurposeFileExplorer(BasicFileExplorer, FilterableMixin, MaterializeMixi
         filters: Filter | Sequence[Filter] | None = None,
         logic: Logic | str = Logic.AND,
     ):
+        """
+        Args:
+            pattern (str | Sequence[str]): Filename pattern to match. Defaults to '*'; i.e., 'any'.
+            filters (Filter | Sequence[Filter], optional): Filters to apply. Defaults to None.
+            logic (Logic | str): Logic to apply to the filters. Defaults to 'AND'.
+        """
         super().__init__(pattern=pattern)
         FilterableMixin.__init__(self, filters=filters, logic=logic)
 
     def scan(self, root_dir: Path | str, /) -> Iterator[Path]:
+        """
+        Scan the directory for files matching the pattern and applying the filters.
+
+        Args:
+            root_dir (Path | str): The root directory to scan.
+        """
         for path in super().scan(root_dir):
             if self.apply_filters(path):
                 yield path
@@ -214,6 +255,7 @@ class NiftiExplorer(TwoStageFileExplorer, FilterableMixin, MaterializeMixin):
     --------
     A) Find all nifti files ('.nii.gz' or '.nii') in any dataset, regardless the structure:
        - Default behavior; no need to specify anything
+
     ```python
     >>> explorer = NiftiExplorer()
     >>> for path in explorer.scan("/path/to/dataset"):
@@ -226,6 +268,7 @@ class NiftiExplorer(TwoStageFileExplorer, FilterableMixin, MaterializeMixin):
        - Set `stage_2_pattern` to match BIDS-style T1w MR images
        - Set `filters` to exclude `T1w_preprocessed.nii.*` files
        - Set `progress` and `desc` to track progress
+
     ```python
     >>> explorer = NiftiExplorer(stage_1_pattern="sub-*", stage_2_pattern="**/anat/*T1w.nii*", 
     ...                          filters=[ExcludeIfSuffix(suffix="preprocessed")])
@@ -235,15 +278,17 @@ class NiftiExplorer(TwoStageFileExplorer, FilterableMixin, MaterializeMixin):
     ```
 
     C) Same as B, but skip files without a segmentation mask in a dedicated labels directory:
+
     ```python
     >>> explorer = NiftiExplorer(stage_1_pattern="sub-*", stage_2_pattern="**/anat/*T1w.nii*", 
-    ...                          filters=[IncludeIfFileExists(filename_pattern="*seg*", search_in="/labels--", 
+    ...                          filters=[IncludeIfFileExists(filename_pattern="*seg*", search_in="/labels", 
     ...                                                       mirror_relative_to="/path/to/dataset")])
     >>> for path in explorer.scan("/path/to/dataset"):
     ...     preprocess(path)
     ```
 
     D) Get materialized results:
+
     ```python
     >>> all_paths = explorer.list("/path/to/dataset")
     >>> any_path = explorer.first("/path/to/dataset")
@@ -259,6 +304,15 @@ class NiftiExplorer(TwoStageFileExplorer, FilterableMixin, MaterializeMixin):
         filters: Filter | Sequence[Filter] | None = None,
         logic: Logic | str = Logic.AND,
     ):
+        """
+        Args:
+            stage_1_pattern (str): Pattern to match stage 1 directories. Defaults to '*'; 
+                i.e., all directories.
+            stage_2_pattern (str): Pattern to match stage 2 files. Defaults to '*.nii*'; 
+                i.e., all nifti files.
+            filters (Filter | Sequence[Filter], optional): Filters to apply. Defaults to None.
+            logic (Logic | str): Logic to apply to the filters. Defaults to 'AND'.
+        """
         super().__init__(
             stage_1_pattern=stage_1_pattern,
             stage_2_pattern=stage_2_pattern,
@@ -273,7 +327,15 @@ class NiftiExplorer(TwoStageFileExplorer, FilterableMixin, MaterializeMixin):
         progress: bool = False,
         **tqdm_kw,
     ) -> Iterator[Path]:
-        """Scan dataset with two-stage file discovery to track progress."""
+        """
+        Scan dataset with two-stage file discovery to track progress.
+
+        Args:
+            root_dir (Path | str): The root directory to scan.
+            progress (bool): Whether to track progress. Defaults to False.
+            **tqdm_kw: Additional keyword arguments to pass to `tqdm`. Most common
+                are `total`, and `desc`.
+        """
         for path in super().scan(root_dir, progress=progress, **tqdm_kw):
             if self.apply_filters(path):
                 yield path

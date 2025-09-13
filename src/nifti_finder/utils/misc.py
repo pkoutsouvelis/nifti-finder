@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TypeVar
+from typing import TypeVar, cast
 
 T = TypeVar("T")
 
 def ensure_seq(obj: T | Sequence[T]) -> Sequence[T]:
-    return obj if isinstance(obj, Sequence) else [obj]
+    if isinstance(obj, str):
+        return cast(Sequence[T], [obj])
+    if isinstance(obj, Sequence):
+        return obj
+    return cast(Sequence[T], [obj])

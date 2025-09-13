@@ -120,7 +120,7 @@ class TestIfFileExistsFilter:
         assert_filter(filter, [fs["t1_sub1"], fs["t1_sub2"]], [True, False])
 
     def test_include_if_file_exists_in_mirror_dir(self, fs):
-        filter = IncludeIfFileExists(filename_pattern="*seg*", search_in=f"{fs['labels_root']}--", 
+        filter = IncludeIfFileExists(filename_pattern="*seg*", search_in=fs["labels_root"], 
                                      mirror_relative_to=fs["data_root"])
         assert_filter(filter, [fs["t1_sub1"], fs["t1_sub2"]], [False, True])
     
@@ -129,7 +129,7 @@ class TestIfFileExistsFilter:
         assert_filter(filter, [fs["data_root"] / "sub-1" / "ses-1 / labels" / "t1_seg.nii.gz"], [True])
 
     def test_include_if_file_exists_in_relative_dir(self, fs):
-        filter = IncludeIfFileExists(filename_pattern="*seg*", search_in=f"--labels/")
+        filter = IncludeIfFileExists(filename_pattern="labels/*seg*", search_in="--")
         assert_filter(filter, [fs["t1_sub1"], fs["t1_sub2"]], [True, False])
 
     def test_exclude_if_file_exists_in_same_dir(self, fs):
@@ -137,7 +137,7 @@ class TestIfFileExistsFilter:
         assert_filter(filter, [fs["t1_sub1"], fs["t1_sub2"]], [False, True])
     
     def test_exclude_if_file_exists_in_mirror_dir(self, fs):
-        filter = ExcludeIfFileExists(filename_pattern="*seg*", search_in=f"{fs['labels_root']}--", 
+        filter = ExcludeIfFileExists(filename_pattern="*seg*", search_in=fs["labels_root"], 
                                      mirror_relative_to=fs["data_root"])
         assert_filter(filter, [fs["t1_sub1"], fs["t1_sub2"]], [True, False])
 
