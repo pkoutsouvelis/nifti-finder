@@ -271,7 +271,7 @@ class NiftiExplorer(TwoStageFileExplorer, FilterableMixin, MaterializeMixin):
 
     ```python
     >>> explorer = NiftiExplorer(stage_1_pattern="sub-*", stage_2_pattern="**/anat/*T1w.nii*", 
-    ...                          filters=[ExcludeIfSuffix(suffix="preprocessed")])
+    ...                          filters=[ExcludeFileSuffix(suffix="preprocessed")])
     >>> for path in explorer.scan("/path/to/dataset", progress=True, desc="Subjects"):
     ...     preprocess(path)
     >>> Subjects:  50%|███████████████████▌               | 30/60 [00:15<00:15,  2.00 it/s]
