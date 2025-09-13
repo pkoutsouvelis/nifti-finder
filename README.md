@@ -176,7 +176,7 @@ explorer.add_filters(filename_filter)
 - Explorers
   - `BasicFileExplorer` - pattern-only scanning (any structure).
   - `TwoStageFileExplorer` - pattern-only scanning with progress tracking (nested structure).
-  - `AllPurposeFileExplorer` - pattern scanning + filters (any dataset structure)
+  - `AllPurposeFileExplorer` - pattern scanning + filters (any structure)
   - `NiftiExplorer` - pattern scanning (preconfigured for NIfTI) + filters + progress tracking (nested structure)
 - Filters (selected)
   - Include/Exclude: `Extension`, `FilePrefix`, `FileSuffix`, `FileRegex`, `DirectoryPrefix/Suffix/Regex`, `IfFileExists`
