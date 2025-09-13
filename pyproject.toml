@@ -13,7 +13,6 @@ authors = [
     {name = "Petros Koutsouvelis"},
 ]
 dependencies = [
-  "pandas>=2.0,<3.0",
   "tqdm>=4.66,<5",
 ]
 
@@ -42,3 +41,8 @@ markers = [
 [tool.black]
 line-length = 88
 target-version = ["py39"]
+
+[project.urls]
+Homepage = "https://github.com/pkoutsouvelis/nifti-finder"
+Repository = "https://github.com/pkoutsouvelis/nifti-finder"
+Issues = "https://github.com/pkoutsouvelis/nifti-finder/issues"
