@@ -1,3 +1,8 @@
+[![PyPI version](https://img.shields.io/pypi/v/nifti-finder.svg)](https://pypi.org/project/nifti-finder/)
+[![Python versions](https://img.shields.io/pypi/pyversions/nifti-finder.svg)](https://pypi.org/project/nifti-finder/)
+![License](https://img.shields.io/badge/license-Apache%202.0-blue)
+[![CI](https://github.com/pkoutsouvelis/nifti-finder/actions/workflows/ci.yml/badge.svg)](https://github.com/pkoutsouvelis/nifti-finder/actions/workflows/ci.yml)
+
 ## nifti-finder
 
 Navigate neuroimaging datasets (and more) with simple file explorers and filters. Optimized for NIfTI workflows but flexible enough for any file type by adjusting filename patterns.
