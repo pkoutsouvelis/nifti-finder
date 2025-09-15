@@ -5,12 +5,15 @@
 
 ## nifti-finder
 
-Navigate neuroimaging datasets (and more) with simple file explorers and filters. Optimized for NIfTI workflows but flexible enough for any file type by adjusting filename patterns.
+Navigate neuroimaging datasets (and more) using flexible file explorers and filters. 
+Optimized for typical neuroimaging research workflows, including BIDS-structured datasets.
 
-- **Python**: >= 3.10
-- **License**: Apache 2.0
+## Key features
+- **Flexible file discovery** with glob-based pattern matching for any dataset structure. 
+- Rich set of **composable filters** for precise dataset querying (by file extension, prefix/suffix, regex, existence of related files, etc.).
+- **Extensible design** with modular, reusable interfaces for creating custom explorers and filters
 
-### Installation
+## Installation
 
 ```bash
 pip install nifti-finder
@@ -18,36 +21,34 @@ pip install nifti-finder
 pip install -e .
 ```
 
-### Example usage
+---
 
-#### Explore NIfTI files with nested structure
+## Quickstart
+
+#### Get all NIfTI files from any nested dataset
 
 ```python
-from nifti_finder.explorers import NiftiExplorer
+from nifti_finder.explorers import NeuroExplorer
+
+from your_package import preprocess
 
 # Default: finds all .nii and .nii.gz files
-explorer = NiftiExplorer()
+explorer = NeuroExplorer()
 
 for path in explorer.scan("/path/to/dataset"):
-    print(path)
+    preprocess(path)
 ```
 
 #### Track subject-level progress in BIDS-style datasets
 
 ```python
-from nifti_finder.explorers import NiftiExplorer
-from nifti_finder.filters import ExcludeFileSuffix
-
-from your_package import preprocess
-
-explorer = NiftiExplorer(
-    stage_1_pattern="sub-*",              # level to compute progress (e.g., root/sub-*/...)
-    stage_2_pattern="**/anat/*T1w.nii*",  # rest (e.g., ses-*/anat/T1w.nii.gz)
+explorer = NeuroExplorer(
+    outer="sub-*",              # level to compute progress (e.g., root/sub-*/...)
+    inner="**/anat/*T1w.nii*",  # rest (e.g., ses-*/anat/T1w.nii.gz)
 )
 
 for path in explorer.scan("/path/to/dataset", progress=True, desc="Subjects"):
     preprocess(path)
-
 ```
 
 Output:
@@ -56,21 +57,18 @@ Output:
 Subjects:  50%|███████████████████▌               | 30/60 [00:15<00:15,  2.00 it/s]
 ```
 
-#### Require a segmentation mask in a parallel labels/ tree
+#### Exclude subjects with missing data; e.g., a segmentation mask
 
 ```python
-from nifti_finder.explorers import NiftiExplorer
 from nifti_finder.filters import IncludeIfFileExists
 
-from your_package import preprocess
-
-explorer = NiftiExplorer(
-    stage_1_pattern="sub-*",
-    stage_2_pattern="**/anat/*T1w.nii*",
+explorer = NeuroExplorer(
+    outer="sub-*",
+    inner="**/anat/*T1w.nii*",
     filters=[
         IncludeIfFileExists(
-            filename_pattern="*seg*",
-            search_in="/labels",
+            filename_pattern="*seg*", # require a segmentation mask
+            search_in="/labels",      # in a parallel labels/ tree
             mirror_relative_to="/path/to/dataset",
         )
     ],
@@ -80,21 +78,36 @@ for path in explorer.scan("/path/to/dataset"):
     preprocess(path)
 ```
 
-### Extra functionality
+---
 
-#### Use with non-NIfTI files (e.g., JSON)
+## API Overview
+
+- **Explorers**
+  - `AllPurposeFileExplorer` - general-purpose scanning with patterns + filters.
+  - `NeuroExplorer` - two-stage scanning (outer/inner) with patterns + filters + progress tracking, optimized for neuroimaging workflows.
+- **Filters**
+  - Include/Exclude: `Extension`, `FilePrefix`, `FileSuffix`, `FileRegex`, `DirectoryPrefix/Suffix/Regex`, `IfFileExists`
+  - Filters can be combined with logical operators (`AND`/`OR`).
+- **Mixins & Interfaces**
+  - `BasicFileExplorer` & `TwoStageFileExplorer` for traversal
+  - `MaterializeMixin` — utilities to list, deduplicate, sort, batch, or count matches.
+  - `FilterableMixin` — add, remove, and compose filters dynamically.
+
+---
+
+## Extended Examples
+
+### Use with non-NIfTI files (e.g., JSON)
 
 ```python
-from nifti_finder import NiftiExplorer, AllPurposeFileExplorer
-
-explorer = NiftiExplorer(stage_1_pattern="sub-*", stage_2_pattern="**/*.json")
+explorer = NeuroExplorer(outer="sub-*", inner="**/*.json")
 for p in explorer.scan("/path/to/bids", progress=True, desc="Subjects"):
     print(p)
 ```
 
 Explorers support multiple patterns and filters, but will traverse once per pattern.
 
-#### General-purpose exploration
+### General-purpose exploration
 
 If you don’t want to assume any nested (subject/... or dataset/subject/...) hierarchy, use `AllPurposeFileExplorer` for flexible scanning.
 
@@ -107,8 +120,8 @@ for path in explorer.scan("/path/to/dataset"):
     print(path)
 ```
 
-#### Materializing Results
-Both `NiftiExplorer` and `AllPurposeExplorer` provide convenience methods to turn the streaming output of scan() into concrete Python data structures.
+### Materialize results
+Both `NeuroExplorer` and `AllPurposeExplorer` provide convenience methods to turn the streaming output of scan() into concrete Python data structures.
 
 This is useful when you want:
 - A list of paths (with optional sorting, deduplication, or limiting)
@@ -118,21 +131,16 @@ This is useful when you want:
 - Iteration in batches
 
 ```python
-from nifti_finder.explorers import NiftiExplorer
-
-explorer = NiftiExplorer(stage_1_pattern="sub-*", stage_2_pattern="**/anat/*T1w.nii*")
+explorer = NeuroExplorer(outer="sub-*", inner="**/anat/*T1w.nii*")
 paths = explorer.list("/path/to/dataset", sort=True, unique=True)
 ```
 
-#### Filtering
+### Chainable filtering
 
-Both `NiftiExplorer` and `AllPurposeExplorer` allow include/exclude filters to refine results.
+Both `NeuroExplorer` and `AllPurposeExplorer` allow include/exclude filters to refine results.
 
 ```python
-from nifti_finder.explorers import AllPurposeFileExplorer
-from nifti_finder.filters import (
-    IncludeExtension, ExcludeDirPrefix, IncludeIfFileExists
-)
+from nifti_finder.filters import IncludeExtension, ExcludeDirPrefix
 
 explorer = AllPurposeFileExplorer(
     pattern="**/*.nii*",
@@ -145,10 +153,10 @@ explorer = AllPurposeFileExplorer(
 )
 
 for path in explorer.scan("/path/to/dataset"):
-    print(path)
+    preprocess(path)
 ```
 
-Filters can by dynamically adjusted.
+Filters can be dynamically adjusted.
 
 ```python
 explorer.add_filters(ExcludeFileSuffix("mask"))
@@ -176,18 +184,8 @@ filename_filter = ComposeFilter(
 explorer.add_filters(filename_filter)
 ```
 
-### API Overview
 
-- Explorers
-  - `BasicFileExplorer` - pattern-only scanning (any structure).
-  - `TwoStageFileExplorer` - pattern-only scanning with progress tracking (nested structure).
-  - `AllPurposeFileExplorer` - pattern scanning + filters (any structure)
-  - `NiftiExplorer` - pattern scanning (preconfigured for NIfTI) + filters + progress tracking (nested structure)
-- Filters (selected)
-  - Include/Exclude: `Extension`, `FilePrefix`, `FileSuffix`, `FileRegex`, `DirectoryPrefix/Suffix/Regex`, `IfFileExists`
-
-
-### Development
+## Development
 
 ```bash
 # Setup
@@ -196,10 +194,3 @@ pip install -e .[test]
 # Run tests
 pytest -q
 ```
-
-### Why nifti-finder?
-
-- Simple patterns for fast discovery
-- Composable filters for precise control
-- Flexible traversal with progress tracking for common neuroimaging layouts
-- Works for any file types (not just NIfTI) by changing patterns

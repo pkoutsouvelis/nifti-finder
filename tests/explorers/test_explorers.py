@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import warnings
+
+import pytest
+
 from nifti_finder.explorers import (
     BasicFileExplorer,
     TwoStageFileExplorer,
     AllPurposeFileExplorer,
+    NeuroExplorer,
     NiftiExplorer,
 )
 from nifti_finder.filters import ExcludeDirectoryPrefix
@@ -179,9 +184,9 @@ class TestAllPurposeFileExplorer:
         )
 
 
-class TestNiftiExplorer:
+class TestNeuroExplorer:
     """
-    Integration tests for `NiftiExplorer`.
+    Integration tests for `NeuroExplorer`.
 
     Tests: 
     A) All nifti files: Check default behavior.
@@ -193,7 +198,7 @@ class TestNiftiExplorer:
         that have a 'ses-*' directory. Also checks `remove_filters()` method.
     """
     def test_all_nifti_files(self, mock_datasets):
-        explorer = NiftiExplorer()
+        explorer = NeuroExplorer()
         paths = explorer.scan(mock_datasets["bids_root"])
         paths = list(paths)
         assert len(paths) == 5
@@ -203,8 +208,8 @@ class TestNiftiExplorer:
         )
     
     def test_all_nifti_files_bids_w_progress(self, mock_datasets):
-        explorer = NiftiExplorer(stage_1_pattern="sub-*", 
-                                stage_2_pattern="**/anat/*T1w.nii*")
+        explorer = NeuroExplorer(outer="sub-*", 
+                                 inner="**/anat/*T1w.nii*")
         paths = explorer.scan(mock_datasets["bids_root"], progress=True, desc="Subjects")
         paths = list(paths)
         assert len(paths) == 5
@@ -214,8 +219,8 @@ class TestNiftiExplorer:
         )
 
     def test_all_nifti_files_multi_datasets_w_progress(self, mock_datasets):
-        explorer = NiftiExplorer(stage_1_pattern="OpenNeuro-ds*", 
-                                stage_2_pattern="*.nii*")
+        explorer = NeuroExplorer(outer="OpenNeuro-ds*", 
+                                 inner="*.nii*")
         paths = explorer.scan(mock_datasets["multi_root"])
         paths = list(paths)
         assert len(paths) == 5
@@ -225,9 +230,9 @@ class TestNiftiExplorer:
         )
 
     def test_all_nifti_files_multi_datasets_filter(self, mock_datasets):
-        explorer = NiftiExplorer(stage_1_pattern="OpenNeuro-ds*", 
-                                stage_2_pattern="*.nii*",
-                                filters=[ExcludeDirectoryPrefix("ses-")])
+        explorer = NeuroExplorer(outer="OpenNeuro-ds*", 
+                                 inner="*.nii*",
+                                 filters=[ExcludeDirectoryPrefix("ses-")])
         paths = explorer.scan(mock_datasets["multi_root"])
         paths = list(paths)
         assert len(paths) == 0
@@ -243,3 +248,50 @@ class TestNiftiExplorer:
             path.name.endswith(".nii") or path.name.endswith(".nii.gz") 
             for path in paths
         )
+
+
+# Backward compatibility
+class TestNiftiExplorer:
+    """
+    Checks `NiftiExplorer` is deprecated and emits a deprecation warning
+    and preserves the same functionality as `NeuroExplorer`.
+    """
+    def test_deprecation_warning(self):
+        with pytest.warns(DeprecationWarning):
+            NiftiExplorer()
+        
+    def test_deprecation_warning_with_args(self):
+        with pytest.warns(DeprecationWarning):
+            NiftiExplorer(stage_1_pattern="sub-*", stage_2_pattern="**/anat/*T1w.nii*")
+
+    def test_deprecation_warning_with_new_args(self):
+        with pytest.warns(DeprecationWarning):
+            NiftiExplorer(outer="sub-*", inner="**/anat/*T1w.nii*")
+
+    def test_same_functionality_old_kwargs(self, mock_datasets):
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+            explorer = NiftiExplorer(stage_1_pattern="sub-*", 
+                                    stage_2_pattern="**/anat/*T1w.nii*")
+            paths = explorer.scan(mock_datasets["bids_root"])
+            paths = list(paths)
+            assert len(paths) == 5
+            assert all(
+                path.name.endswith(".nii") or path.name.endswith(".nii.gz") 
+                for path in paths
+            )
+
+    def test_same_functionality_new_kwargs(self, mock_datasets):
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+            explorer = NiftiExplorer(outer="sub-*", 
+                                    inner="**/anat/*T1w.nii*")
+            paths = explorer.scan(mock_datasets["bids_root"])
+            paths = list(paths)
+            assert len(paths) == 5
+            assert all(
+                path.name.endswith(".nii") or path.name.endswith(".nii.gz") 
+                for path in paths
+            )
