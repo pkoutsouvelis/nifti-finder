@@ -21,11 +21,9 @@ pip install nifti-finder
 pip install -e .
 ```
 
----
-
 ## Quickstart
 
-#### Get all NIfTI files from any nested dataset
+### Get all NIfTI files from any nested dataset
 
 ```python
 from nifti_finder.explorers import NeuroExplorer
@@ -39,7 +37,7 @@ for path in explorer.scan("/path/to/dataset"):
     preprocess(path)
 ```
 
-#### Track subject-level progress in BIDS-style datasets
+### Track subject-level progress in BIDS-style datasets
 
 ```python
 explorer = NeuroExplorer(
@@ -57,7 +55,7 @@ Output:
 Subjects:  50%|███████████████████▌               | 30/60 [00:15<00:15,  2.00 it/s]
 ```
 
-#### Exclude subjects with missing data; e.g., a segmentation mask
+### Exclude subjects with missing data; e.g., a segmentation mask
 
 ```python
 from nifti_finder.filters import IncludeIfFileExists
@@ -78,8 +76,6 @@ for path in explorer.scan("/path/to/dataset"):
     preprocess(path)
 ```
 
----
-
 ## API Overview
 
 - **Explorers**
@@ -89,11 +85,9 @@ for path in explorer.scan("/path/to/dataset"):
   - Include/Exclude: `Extension`, `FilePrefix`, `FileSuffix`, `FileRegex`, `DirectoryPrefix/Suffix/Regex`, `IfFileExists`
   - Filters can be combined with logical operators (`AND`/`OR`).
 - **Mixins & Interfaces**
-  - `BasicFileExplorer` & `TwoStageFileExplorer` for traversal
+  - `BasicFileExplorer` & `TwoStageFileExplorer` for file traversal
   - `MaterializeMixin` — utilities to list, deduplicate, sort, batch, or count matches.
   - `FilterableMixin` — add, remove, and compose filters dynamically.
-
----
 
 ## Extended Examples
 
