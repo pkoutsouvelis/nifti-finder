@@ -13,6 +13,7 @@ Optimized for typical neuroimaging research workflows, including BIDS-structured
 - Rich set of **composable filters** for precise dataset querying (by file extension, prefix/suffix, regex, existence of related files, etc.).
 - **Extensible design** with modular, reusable interfaces for creating custom explorers and filters
 
+
 ## Installation
 
 ```bash
