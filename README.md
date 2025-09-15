@@ -98,7 +98,7 @@ for path in explorer.scan("/path/to/dataset"):
 
 ## Extended Examples
 
-#### Use with non-NIfTI files (e.g., JSON)
+### Use with non-NIfTI files (e.g., JSON)
 
 ```python
 explorer = NeuroExplorer(outer="sub-*", inner="**/*.json")
@@ -108,7 +108,7 @@ for p in explorer.scan("/path/to/bids", progress=True, desc="Subjects"):
 
 Explorers support multiple patterns and filters, but will traverse once per pattern.
 
-#### General-purpose exploration
+### General-purpose exploration
 
 If you don’t want to assume any nested (subject/... or dataset/subject/...) hierarchy, use `AllPurposeFileExplorer` for flexible scanning.
 
@@ -121,7 +121,7 @@ for path in explorer.scan("/path/to/dataset"):
     print(path)
 ```
 
-#### Materialize results
+### Materialize results
 Both `NeuroExplorer` and `AllPurposeExplorer` provide convenience methods to turn the streaming output of scan() into concrete Python data structures.
 
 This is useful when you want:
@@ -136,7 +136,7 @@ explorer = NeuroExplorer(outer="sub-*", inner="**/anat/*T1w.nii*")
 paths = explorer.list("/path/to/dataset", sort=True, unique=True)
 ```
 
-#### Chainable filtering
+### Chainable filtering
 
 Both `NeuroExplorer` and `AllPurposeExplorer` allow include/exclude filters to refine results.
 
