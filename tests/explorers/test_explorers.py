@@ -11,7 +11,6 @@ from nifti_finder.explorers import (
     TwoStageFileExplorer,
     AllPurposeFileExplorer,
     NeuroExplorer,
-    NiftiExplorer,
 )
 from nifti_finder.filters import ExcludeDirectoryPrefix
 
@@ -264,51 +263,3 @@ class TestNeuroExplorer:
             path.name.endswith(".nii") or path.name.endswith(".nii.gz")
             for path in paths
         )
-
-
-# Backward compatibility
-class TestNiftiExplorer:
-    """
-    Checks `NiftiExplorer` is deprecated and emits a deprecation warning
-    and preserves the same functionality as `NeuroExplorer`.
-    """
-
-    def test_deprecation_warning(self):
-        with pytest.warns(DeprecationWarning):
-            NiftiExplorer()
-
-    def test_deprecation_warning_with_args(self):
-        with pytest.warns(DeprecationWarning):
-            NiftiExplorer(stage_1_pattern="sub-*", stage_2_pattern="**/anat/*T1w.nii*")
-
-    def test_deprecation_warning_with_new_args(self):
-        with pytest.warns(DeprecationWarning):
-            NiftiExplorer(outer="sub-*", inner="**/anat/*T1w.nii*")
-
-    def test_same_functionality_old_kwargs(self, mock_datasets):
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-            explorer = NiftiExplorer(
-                stage_1_pattern="sub-*", stage_2_pattern="**/anat/*T1w.nii*"
-            )
-            paths = explorer.scan(mock_datasets["bids_root"])
-            paths = list(paths)
-            assert len(paths) == 5
-            assert all(
-                path.name.endswith(".nii") or path.name.endswith(".nii.gz")
-                for path in paths
-            )
-
-    def test_same_functionality_new_kwargs(self, mock_datasets):
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-            explorer = NiftiExplorer(outer="sub-*", inner="**/anat/*T1w.nii*")
-            paths = explorer.scan(mock_datasets["bids_root"])
-            paths = list(paths)
-            assert len(paths) == 5
-            assert all(
-                path.name.endswith(".nii") or path.name.endswith(".nii.gz")
-                for path in paths
-            )
