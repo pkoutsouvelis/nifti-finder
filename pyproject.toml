@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nifti-finder"
-version = "1.1.0"
+version = "1.2.0"
 description = "Flexible file explorers and filters for navigating neuroimaging datasets and beyond."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -48,6 +48,9 @@ dev = [
     "mypy",
     "build",
     "twine",
+    "black",
+    "docformatter",
+    "interrogate",
 ]
 
 [tool.setuptools]
@@ -67,6 +70,42 @@ markers = [
 [tool.black]
 line-length = 88
 target-version = ["py310"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+extend-exclude = ["build", "dist", ".venv"]
+
+# Star-import re-export barrels; submodule `__all__` defines the public API (F403/F405 are false positives).
+[tool.ruff.lint.per-file-ignores]
+"src/nifti_finder/__init__.py" = ["F403", "F405"]
+"src/nifti_finder/explorers/__init__.py" = ["F403", "F405"]
+"src/nifti_finder/filters/__init__.py" = ["F403", "F405"]
+"src/nifti_finder/utils/__init__.py" = ["F403", "F405"]
+"tests/**/*.py" = ["F403", "F405"]
+
+[tool.docformatter]
+recursive = true
+wrap-summaries = 88
+wrap-descriptions = 88
+black = true
+
+[tool.interrogate]
+ignore-init-method = true
+ignore-init-module = true
+ignore-magic = true
+ignore-semiprivate = false
+ignore-private = true
+ignore-property-decorators = true
+ignore-module = false
+ignore-nested-functions = true
+ignore-nested-classes = true
+ignore-setters = false
+fail-under = 80
+exclude = ["build", "dist", ".venv", "tests"]
+verbose = 1
+quiet = false
+color = true
 
 [project.urls]
 Homepage = "https://github.com/pkoutsouvelis/nifti-finder"

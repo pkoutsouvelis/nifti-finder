@@ -1,4 +1,4 @@
-"""Miscellaneous utilities"""
+"""Miscellaneous utilities."""
 
 from __future__ import annotations
 
@@ -9,20 +9,25 @@ import warnings
 
 T = TypeVar("T")
 
+
 def ensure_seq(obj: T | Sequence[T]) -> Sequence[T]:
+    """Ensure an object is a sequence."""
     if isinstance(obj, str):
         return cast(Sequence[T], [obj])
     if isinstance(obj, Sequence):
         return obj
     return cast(Sequence[T], [obj])
 
+
 def deprecated_class(
-    new_name: str, 
+    new_name: str,
     remove_in: str | None = None,
 ) -> Callable[[type[T]], type[T]]:
+    """Mark a class as deprecated.
+
+    Emits a DeprecationWarning on instantiation.
     """
-    Mark a class as deprecated. Emits a DeprecationWarning on instantiation.
-    """
+
     def decorator(cls: type[T]) -> type[T]:
         orig_init = cls.__init__
 
@@ -36,20 +41,23 @@ def deprecated_class(
 
         cls.__init__ = cast(Any, new_init)
         return cls
+
     return decorator
 
+
 def deprecated_alias(
-    *, 
-    old: str, 
-    new: str, 
-    since: str, 
+    *,
+    old: str,
+    new: str,
+    since: str,
     remove_in: str,
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
-    """
-    Shim a deprecated keyword argument to a new name.
+    """Shim a deprecated keyword argument to a new name.
+
     - Warns if `old` is used.
     - Does NOT overwrite `new` if both are provided.
     """
+
     def deco(fn: Callable[..., T]) -> Callable[..., T]:
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> T:
@@ -71,5 +79,7 @@ def deprecated_alias(
                     )
                     kwargs[new] = kwargs.pop(old)
             return fn(*args, **kwargs)
+
         return wrapper
+
     return deco

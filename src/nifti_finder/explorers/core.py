@@ -1,4 +1,4 @@
-"""Concrete implementation of file explorers"""
+"""Concrete implementation of file explorers."""
 
 from __future__ import annotations
 
@@ -43,6 +43,7 @@ class BasicFileExplorer(FileExplorer):
     ...     preprocess(path)
     ```
     """
+
     def __init__(self, pattern: str | Sequence[str] = "*"):
         """
         Args:
@@ -51,8 +52,7 @@ class BasicFileExplorer(FileExplorer):
         self._patterns = ensure_seq(pattern)
 
     def scan(self, root_dir: Path | str, /) -> Iterator[Path]:
-        """
-        Scan the directory for files matching the pattern.
+        """Scan the directory for files matching the pattern.
 
         Args:
             root_dir (Path | str): The root directory to scan.
@@ -87,7 +87,7 @@ class TwoStageFileExplorer(FileExplorer):
     ...     preprocess(path)
     >>> Subjects:  50%|███████████████████▌               | 30/60 [00:15<00:15,  2.00 it/s]
     ```
-    
+
     B) Explore multiple datasets with progress tracking:
        - Specify `stage_1_pattern` to match dataset-level directories; e.g., `OpenNeuro-ds001`
        - Specify `stage_2_pattern` to match BIDS-style T1w MR images
@@ -100,6 +100,7 @@ class TwoStageFileExplorer(FileExplorer):
     >>> Datasets:  50%|███████████████████▌               | 30/60 [00:15<00:15,  2.00 it/s]
     ```
     """
+
     def __init__(
         self,
         stage_1_pattern: str | Sequence[str] = "*",
@@ -107,9 +108,9 @@ class TwoStageFileExplorer(FileExplorer):
     ):
         """
         Args:
-            stage_1_pattern (str | Sequence[str]): Pattern to match stage 1 directories. 
+            stage_1_pattern (str | Sequence[str]): Pattern to match stage 1 directories.
                 Defaults to '*'; i.e., 'any'.
-            stage_2_pattern (str | Sequence[str]): Pattern to match stage 2 files. 
+            stage_2_pattern (str | Sequence[str]): Pattern to match stage 2 files.
                 Defaults to '*'; i.e., 'any'.
         """
         self._stage_1_patterns = ensure_seq(stage_1_pattern)
@@ -123,8 +124,7 @@ class TwoStageFileExplorer(FileExplorer):
         progress: bool = False,
         **tqdm_kw,
     ) -> Iterator[Path]:
-        """
-        Scan dataset with two-stage file discovery to track progress.
+        """Scan dataset with two-stage file discovery to track progress.
 
         Args:
             root_dir (Path | str): The root directory to scan.
@@ -136,11 +136,14 @@ class TwoStageFileExplorer(FileExplorer):
         if not root.is_dir():
             raise NotADirectoryError(f"{root} is not a valid directory")
 
-        stage_1_dirs = [p for ptrn in self._stage_1_patterns for p in root.glob(ptrn) if p.is_dir()]
+        stage_1_dirs = [
+            p for ptrn in self._stage_1_patterns for p in root.glob(ptrn) if p.is_dir()
+        ]
 
         if progress:
             try:
                 from tqdm.auto import tqdm
+
                 it = tqdm(stage_1_dirs, total=len(stage_1_dirs), **tqdm_kw)
             except ImportError:
                 it = stage_1_dirs
@@ -156,17 +159,17 @@ class TwoStageFileExplorer(FileExplorer):
 
 class AllPurposeFileExplorer(BasicFileExplorer, FilterableMixin, MaterializeMixin):
     """
-    All-purpose file explorer with basic pattern-based file discovery, filtering support, 
+    All-purpose file explorer with basic pattern-based file discovery, filtering support,
     and convenience methods for materializing the results.
 
     Finds all files in a directory and applies a cached composed filter to each filepath.
-    
+
     Note:
         For faster exploration, prioritize `patterns` for filtering by name; apply subsequent filters
         only to the narrowed down results. Supports multiple `patterns`, but will traverse the
-        directory once per pattern, which can be slow on large datasets. 
+        directory once per pattern, which can be slow on large datasets.
         The best performance is expected with a single pattern + filters.
-    
+
     Examples:
     --------
     A) Find all nifti files ('.nii.gz' or '.nii') in any dataset, regardless the structure:
@@ -208,9 +211,10 @@ class AllPurposeFileExplorer(BasicFileExplorer, FilterableMixin, MaterializeMixi
     >>> batched_paths = explorer.batched("/path/to/dataset", size=100)
     ```
     """
+
     def __init__(
-        self, 
-        pattern: str | Sequence[str] = "*", 
+        self,
+        pattern: str | Sequence[str] = "*",
         *,
         filters: Filter | Sequence[Filter] | None = None,
         logic: Logic | str = Logic.AND,
@@ -225,8 +229,7 @@ class AllPurposeFileExplorer(BasicFileExplorer, FilterableMixin, MaterializeMixi
         FilterableMixin.__init__(self, filters=filters, logic=logic)
 
     def scan(self, root_dir: Path | str, /) -> Iterator[Path]:
-        """
-        Scan the directory for files matching the pattern and applying the filters.
+        """Scan the directory for files matching the pattern and applying the filters.
 
         Args:
             root_dir (Path | str): The root directory to scan.
@@ -238,18 +241,18 @@ class AllPurposeFileExplorer(BasicFileExplorer, FilterableMixin, MaterializeMixi
 
 class NeuroExplorer(TwoStageFileExplorer, FilterableMixin, MaterializeMixin):
     """
-    Out-of-the-box file explorer configured to find all nifti files in typical 
+    Out-of-the-box file explorer configured to find all nifti files in typical
     neuroimaging datasets.
 
     Assumes a nested structure with separate outer and inner patterns, as well
-    as optional progress tracking. Supports filtering and convenience methods for 
+    as optional progress tracking. Supports filtering and convenience methods for
     materializing the results.
 
     Note:
         For faster exploration, prioritize `outer` and `inner` patterns for filtering by name;
-        apply subsequent filters only to the narrowed down results. Suppports multiple `outer` 
-        and `inner` patterns, but will traverse the directory once per pattern, which can be slow 
-        on large datasets. The best performance is expected with a single `outer` and `inner` 
+        apply subsequent filters only to the narrowed down results. Suppports multiple `outer`
+        and `inner` patterns, but will traverse the directory once per pattern, which can be slow
+        on large datasets. The best performance is expected with a single `outer` and `inner`
         pattern + filters.
 
     Examples:
@@ -263,7 +266,7 @@ class NeuroExplorer(TwoStageFileExplorer, FilterableMixin, MaterializeMixin):
     ...     preprocess(path)
     ```
 
-    B) Find all T1w MR images ('.nii.gz' or '.nii') in a BIDS-style dataset that are 
+    B) Find all T1w MR images ('.nii.gz' or '.nii') in a BIDS-style dataset that are
        not yet preprocessed:
        - Set `outer` to match subject-level directories
        - Set `inner` to match BIDS-style T1w MR images
@@ -271,7 +274,7 @@ class NeuroExplorer(TwoStageFileExplorer, FilterableMixin, MaterializeMixin):
        - Set `progress` and `desc` to track progress
 
     ```python
-    >>> explorer = NeuroExplorer(outer="sub-*", inner="**/anat/*T1w.nii*", 
+    >>> explorer = NeuroExplorer(outer="sub-*", inner="**/anat/*T1w.nii*",
     ...                          filters=[ExcludeFileSuffix(suffix="preprocessed")])
     >>> for path in explorer.scan("/path/to/dataset", progress=True, desc="Subjects"):
     ...     preprocess(path)
@@ -281,8 +284,8 @@ class NeuroExplorer(TwoStageFileExplorer, FilterableMixin, MaterializeMixin):
     C) Same as B, but skip files without a segmentation mask in a dedicated labels directory:
 
     ```python
-    >>> explorer = NeuroExplorer(outer="sub-*", inner="**/anat/*T1w.nii*", 
-    ...                          filters=[IncludeIfFileExists(filename_pattern="*seg*", search_in="/labels", 
+    >>> explorer = NeuroExplorer(outer="sub-*", inner="**/anat/*T1w.nii*",
+    ...                          filters=[IncludeIfFileExists(filename_pattern="*seg*", search_in="/labels",
     ...                                                       mirror_relative_to="/path/to/dataset")])
     >>> for path in explorer.scan("/path/to/dataset"):
     ...     preprocess(path)
@@ -297,6 +300,7 @@ class NeuroExplorer(TwoStageFileExplorer, FilterableMixin, MaterializeMixin):
     >>> batched_paths = explorer.batched("/path/to/dataset", size=100)
     ```
     """
+
     def __init__(
         self,
         outer: str = "*",
@@ -307,21 +311,21 @@ class NeuroExplorer(TwoStageFileExplorer, FilterableMixin, MaterializeMixin):
     ):
         """
         Args:
-            outer (str): Glob pattern that defines the **first-level search scope**.  
-                Typically used to select high-level groups such as datasets, subjects, 
-                or sessions (e.g., `"sub-*"` in a BIDS dataset). This stage also 
-                determines the units over which progress is tracked.  
-                Defaults to `"*"`, i.e. include all top-level directories.  
+            outer (str): Glob pattern that defines the **first-level search scope**.
+                Typically used to select high-level groups such as datasets, subjects,
+                or sessions (e.g., `"sub-*"` in a BIDS dataset). This stage also
+                determines the units over which progress is tracked.
+                Defaults to `"*"`, i.e. include all top-level directories.
 
-            inner (str): Glob pattern applied **within each outer match** to find 
-                candidate files or subdirectories (e.g., `"**/anat/*T1w.nii*"`).  
-                Defaults to `"*.nii*"`, i.e. all NIfTI files.  
+            inner (str): Glob pattern applied **within each outer match** to find
+                candidate files or subdirectories (e.g., `"**/anat/*T1w.nii*"`).
+                Defaults to `"*.nii*"`, i.e. all NIfTI files.
 
-            filters (Filter | Sequence[Filter], optional): Filters to refine the 
-                discovered paths. Defaults to None.  
+            filters (Filter | Sequence[Filter], optional): Filters to refine the
+                discovered paths. Defaults to None.
 
-            logic (Logic | str): Logical operator to combine multiple filters. 
-                Defaults to `"AND"`.  
+            logic (Logic | str): Logical operator to combine multiple filters.
+                Defaults to `"AND"`.
         """
         super().__init__(
             stage_1_pattern=outer,
@@ -330,15 +334,14 @@ class NeuroExplorer(TwoStageFileExplorer, FilterableMixin, MaterializeMixin):
         FilterableMixin.__init__(self, filters=filters, logic=logic)
 
     def scan(
-        self, 
+        self,
         root_dir: Path | str,
         /,
         *,
         progress: bool = False,
         **tqdm_kw,
     ) -> Iterator[Path]:
-        """
-        Scan dataset with two-stage file discovery to track progress.
+        """Scan dataset with two-stage file discovery to track progress.
 
         Args:
             root_dir (Path | str): The root directory to scan.

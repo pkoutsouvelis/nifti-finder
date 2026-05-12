@@ -1,4 +1,4 @@
-"""Compose multiple filters"""
+"""Compose multiple filters."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from nifti_finder.filters.base import Filter, Logic
 class ComposeFilter(Filter):
     """
     Compose multiple filters with 'AND' or 'OR' logic.
-    
+
     Example use-case to support both '.nii.gz' and '.nii' files:
     ```python
     >>> filter = ComposeFilter([IncludeExtension("nii.gz"), IncludeExtension("nii")], logic="OR")
@@ -29,13 +29,12 @@ class ComposeFilter(Filter):
         filters (Filter | Sequence[Filter]): Filters to compose.
         logic (Logic | str): Logic to use to compose the filters. Defaults to 'AND'.
     """
+
     filters: tuple[Filter, ...] = field()
     logic: Logic = field()
-    
+
     def __init__(
-        self, 
-        filters: Filter | Sequence[Filter],
-        logic: Logic | str = Logic.AND
+        self, filters: Filter | Sequence[Filter], logic: Logic | str = Logic.AND
     ):
         if isinstance(filters, Filter):
             filters = (filters,)
@@ -66,18 +65,17 @@ class ComposeFilter(Filter):
     @property
     def _identity(self):
         return True
-    
+
     def __call__(self, filepath: Path | str, /) -> bool:
-        """
-        Sequentially apply the composed filters to a filepath using the passed logic.
-        
+        """Sequentially apply the composed filters to a filepath using the passed logic.
+
         Args:
             filepath (Path): The filepath to apply the filters to.
         """
         if not self.filters:
             return self._identity
         return self._op(flt(filepath) for flt in self.filters)
-    
+
     def flatten(self) -> ComposeFilter:
         """Return a new ComposeFilter with one-level, same-logic children flattened."""
         flat: list[Filter] = []
@@ -90,6 +88,6 @@ class ComposeFilter(Filter):
                 flat.append(f)
         flat.reverse()
         return ComposeFilter(flat, self.logic)
-    
+
     def __len__(self) -> int:
         return len(self.flatten().filters)

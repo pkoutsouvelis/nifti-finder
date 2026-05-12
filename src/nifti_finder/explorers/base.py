@@ -1,4 +1,4 @@
-"""Interfaces and base classes for file explorers"""
+"""Interfaces and base classes for file explorers."""
 
 from __future__ import annotations
 
@@ -14,8 +14,9 @@ if TYPE_CHECKING:
 
 
 class FileExplorer(ABC):
-    """Interface for file explorer"""
+    """Interface for file explorer."""
+
     @abstractmethod
     def scan(self, root_dir: Path | str, /) -> Iterator[Path]:
-        """Get all files in a directory"""
+        """Get all files in a directory."""
         ...

@@ -1,4 +1,4 @@
-"""Interface-like mixin for any object that can apply filters to a filepath"""
+"""Interface-like mixin for any object that can apply filters to a filepath."""
 
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ from nifti_finder.utils import ensure_seq
 @runtime_checkable
 class Filterable(Protocol):
     """Protocol for any object that can apply filters to a filepath."""
+
     def filters(self) -> tuple[Filter, ...]: ...
     def add_filters(self, filters: Filter | Sequence[Filter]) -> None: ...
     def remove_filters(self, filters: Filter | Sequence[Filter]) -> None: ...
@@ -49,12 +50,13 @@ class FilterableMixin:
     True
     ```
     """
+
     __slots__ = ("_filters", "_logic", "_composed")
 
     def __init__(
-        self, 
+        self,
         filters: Filter | Sequence[Filter] | None = None,
-        logic: Logic | str = Logic.AND
+        logic: Logic | str = Logic.AND,
     ):
         """
         Args:
@@ -69,20 +71,17 @@ class FilterableMixin:
 
     @property
     def filters(self) -> tuple[Filter, ...]:
+        """Get the filters applied to the object."""
         return tuple(self._filters)
 
     def add_filters(self, filters: Filter | Sequence[Filter], /) -> None:
+        """Add filters to the object."""
         seq = list(ensure_seq(filters))
         self._filters.extend(seq)
         self._rebuild_composed()
-    
-    def remove_filters(
-        self, 
-        which: Filter | int | Sequence[Filter | int],
-        /
-    ) -> None:
-        """
-        Remove filters from the object.
+
+    def remove_filters(self, which: Filter | int | Sequence[Filter | int], /) -> None:
+        """Remove filters from the object.
 
         Can remove a single filter, a sequence of filters, or a mix of both, either by index or instance.
 
@@ -99,15 +98,19 @@ class FilterableMixin:
                 except ValueError:
                     continue
             else:
-                raise TypeError(f"Invalid entry in `which`: expected Filter or int, "
-                                f"got {type(f).__name__}")
+                raise TypeError(
+                    f"Invalid entry in `which`: expected Filter or int, "
+                    f"got {type(f).__name__}"
+                )
         self._rebuild_composed()
 
     def clear_filters(self) -> None:
+        """Clear all filters from the object."""
         self._filters.clear()
         self._rebuild_composed()
 
     def apply_filters(self, filepath: Path | str, /) -> bool:
+        """Apply the filters to the given filepath."""
         return self._composed(filepath)
 
     def _rebuild_composed(self) -> None:

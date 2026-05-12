@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterable
 
 import pytest
+
 
 @pytest.fixture(scope="session")
 def file_paths() -> list[Path]:
@@ -19,13 +19,16 @@ def file_paths() -> list[Path]:
         Path(__file__).parent / "prefix_data" / "prefix_file6.nii.gz",
     ]
 
+
 def _write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
 
+
 def _touch(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.touch()
+
 
 def _make_subject(
     root: Path,
@@ -54,6 +57,7 @@ def _make_subject(
     _touch(nii)
     _write_text(jsn, '{"Modality":"MR","Series":"T1w"}\n')
     return root / sub
+
 
 def _make_bids_dataset(dst: Path) -> dict[str, Path]:
     """
@@ -86,6 +90,7 @@ def _make_bids_dataset(dst: Path) -> dict[str, Path]:
         "root": dst,
     }
 
+
 def _make_multi_datasets(dst: Path) -> dict[str, Path]:
     """
     Build a container directory holding datasets:
@@ -105,6 +110,7 @@ def _make_multi_datasets(dst: Path) -> dict[str, Path]:
         made[name] = ds_root
 
     return made
+
 
 @pytest.fixture(scope="session")
 def mock_datasets(tmp_path_factory) -> dict[str, Path]:

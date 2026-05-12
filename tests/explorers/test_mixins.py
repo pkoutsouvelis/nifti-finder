@@ -6,6 +6,7 @@ import pytest
 
 from nifti_finder.explorers import MaterializeMixin
 
+
 class MatObj(MaterializeMixin):
     def __init__(self, dummy_file_paths):
         super().__init__()
@@ -14,6 +15,7 @@ class MatObj(MaterializeMixin):
     def scan(self, root_dir):
         for f in self.file_paths:
             yield f
+
 
 class TestMaterializeMixin:
     @pytest.fixture
@@ -46,8 +48,8 @@ class TestMaterializeMixin:
         assert file == file_paths[0]
 
     def test_any(self, mat_obj):
-        assert mat_obj.any("/a/root/dir") == True
-        assert MatObj([]).any("/a/root/dir") == False
+        assert mat_obj.any("/a/root/dir")
+        assert not MatObj([]).any("/a/root/dir")
 
     @pytest.mark.parametrize("n", [2, 3, 4])
     def test_count(self, file_paths, n):
@@ -58,9 +60,10 @@ class TestMaterializeMixin:
     def test_batched(self, file_paths, size):
         mat_obj = MatObj(file_paths * 3)
         batches = mat_obj.batched("/a/root/dir", size=size)
-        len_expected = (len(file_paths) * 3 // size) + ((len(file_paths) * 3 % size) > 0)
+        len_expected = (len(file_paths) * 3 // size) + (
+            (len(file_paths) * 3 % size) > 0
+        )
         len_actual = len(list(batches))
         assert len_expected == len_actual
         for i, batch in enumerate(batches):
-            assert batch == file_paths[i * size:(i + 1) * size]
-    
+            assert batch == file_paths[i * size : (i + 1) * size]

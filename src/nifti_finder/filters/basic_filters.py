@@ -1,4 +1,4 @@
-"""Implementations of file explorer filters"""
+"""Implementations of file explorer filters."""
 
 from __future__ import annotations
 
@@ -44,8 +44,9 @@ class IncludeExtension(Filter):
     Args:
         extension (str): Target file extension.
     """
+
     extension: str
-    
+
     def __post_init__(self):
         if not self.extension.startswith("."):
             object.__setattr__(self, "extension", f".{self.extension}")
@@ -69,6 +70,7 @@ class IncludeFileSuffix(Filter):
     Args:
         suffix (str): Target file suffix.
     """
+
     suffix: str
 
     def __call__(self, filepath: Path | str, /) -> bool:
@@ -91,6 +93,7 @@ class IncludeFilePrefix(Filter):
     Args:
         prefix (str): Target file prefix.
     """
+
     prefix: str
 
     def __call__(self, filepath: Path | str, /) -> bool:
@@ -111,6 +114,7 @@ class IncludeFileRegex(Filter):
     Args:
         regex (str): Target file regex.
     """
+
     regex: str
 
     def __call__(self, filepath: Path | str, /) -> bool:
@@ -132,6 +136,7 @@ class IncludeDirectorySuffix(Filter):
     Args:
         suffix (str): Target directory suffix.
     """
+
     suffix: str
 
     def __call__(self, filepath: Path | str, /) -> bool:
@@ -156,6 +161,7 @@ class IncludeDirectoryPrefix(Filter):
     Args:
         prefix (str): Target directory prefix.
     """
+
     prefix: str
 
     def __call__(self, filepath: Path | str, /) -> bool:
@@ -179,6 +185,7 @@ class IncludeDirectoryRegex(Filter):
     Args:
         regex (str): Target directory regex.
     """
+
     regex: str
 
     def __call__(self, filepath: Path | str, /) -> bool:
@@ -208,8 +215,8 @@ class IncludeIfFileExists(Filter):
     True
     ```
 
-    B) Include file only if it contains a segmentation mask in a relative directory; 
-       e.g., assume an input file '/data/sub-1/ses-1/t1.nii.gz' with segmentation mask 
+    B) Include file only if it contains a segmentation mask in a relative directory;
+       e.g., assume an input file '/data/sub-1/ses-1/t1.nii.gz' with segmentation mask
              in 'data/sub-1/ses-1/labels/seg.nii.gz':
     ```python
     >>> filter = IncludeIfFileExists(filename_pattern="labels/*seg*", search_in="--")
@@ -217,8 +224,8 @@ class IncludeIfFileExists(Filter):
     True
     ```
 
-    C) Include file only if it contains a segmentation mask in a different directory; 
-       e.g., assume an input file '/data/sub-1/ses-1/t1.nii.gz' with segmentation mask 
+    C) Include file only if it contains a segmentation mask in a different directory;
+       e.g., assume an input file '/data/sub-1/ses-1/t1.nii.gz' with segmentation mask
              in '/labels/sub-1/ses-1/seg.nii.gz':
     ```python
     >>> filter = IncludeIfFileExists(filename_pattern="*seg*", search_in="/labels", mirror_relative_to="/data")
@@ -241,8 +248,9 @@ class IncludeIfFileExists(Filter):
             Note: Default `FileExplorer` implementations assume no fixed source root. Use this mode only
                 when sure that the source root will always contain the `mirror_relative_to` directory.
                 Otherwise the filter will keep silently failing and returning False.
-    
+
     """
+
     filename_pattern: str
     search_in: str = "--"
     mirror_relative_to: Path | str | None = None
@@ -258,12 +266,14 @@ class IncludeIfFileExists(Filter):
                 rel = filepath.parent.relative_to(src_root)
             except ValueError:
                 return False
-            target_dir = (mirror_root / rel)
+            target_dir = mirror_root / rel
         else:
             p = Path(self.search_in)
             target_dir = resolve_path(p) if p.is_absolute() else filepath.parent / p
 
-        pattern = filepath.name if self.filename_pattern == "--" else self.filename_pattern
+        pattern = (
+            filepath.name if self.filename_pattern == "--" else self.filename_pattern
+        )
 
         try:
             return any(p.is_file() for p in target_dir.glob(pattern))
@@ -273,111 +283,111 @@ class IncludeIfFileExists(Filter):
 
 @dataclass(frozen=True, init=False)
 class ExcludeExtension(IncludeExtension):
-    """
-    Exclude files with a specific extension
+    """Exclude files with a specific extension.
 
     Opposite of `IncludeExtension`. See `IncludeExtension` for examples.
-    
+
     Args:
         extension (str): Target file extension.
     """
+
     def __call__(self, filepath: Path | str, /) -> bool:
         return not super().__call__(filepath)
 
 
 @dataclass(frozen=True, init=False)
 class ExcludeFileSuffix(IncludeFileSuffix):
-    """
-    Exclude files with a specific suffix
+    """Exclude files with a specific suffix.
 
     Opposite of `IncludeFileSuffix`. See `IncludeFileSuffix` for examples.
 
     Args:
         suffix (str): Target file suffix.
     """
+
     def __call__(self, filepath: Path | str, /) -> bool:
         return not super().__call__(filepath)
 
 
 @dataclass(frozen=True, init=False)
 class ExcludeFilePrefix(IncludeFilePrefix):
-    """
-    Exclude files with a specific prefix
+    """Exclude files with a specific prefix.
 
     Opposite of `IncludeFilePrefix`. See `IncludeFilePrefix` for examples.
 
     Args:
         prefix (str): Target file prefix.
     """
+
     def __call__(self, filepath: Path | str, /) -> bool:
         return not super().__call__(filepath)
 
 
 @dataclass(frozen=True, init=False)
 class ExcludeFileRegex(IncludeFileRegex):
-    """
-    Exclude files with a specific regex
+    """Exclude files with a specific regex.
 
     Opposite of `IncludeFileRegex`. See `IncludeFileRegex` for examples.
 
     Args:
         regex (str): Target file regex.
     """
+
     def __call__(self, filepath: Path | str, /) -> bool:
         return not super().__call__(filepath)
 
 
 @dataclass(frozen=True, init=False)
 class ExcludeDirectorySuffix(IncludeDirectorySuffix):
-    """
-    Exclude directories with a specific suffix
+    """Exclude directories with a specific suffix.
 
     Opposite of `IncludeDirectorySuffix`. See `IncludeDirectorySuffix` for examples.
 
     Args:
         suffix (str): Target directory suffix.
     """
+
     def __call__(self, filepath: Path | str, /) -> bool:
         return not super().__call__(filepath)
 
 
 @dataclass(frozen=True, init=False)
 class ExcludeDirectoryPrefix(IncludeDirectoryPrefix):
-    """
-    Exclude directories with a specific prefix
+    """Exclude directories with a specific prefix.
 
     Opposite of `IncludeDirectoryPrefix`. See `IncludeDirectoryPrefix` for examples.
 
     Args:
         prefix (str): Target directory prefix.
     """
+
     def __call__(self, filepath: Path | str, /) -> bool:
         return not super().__call__(filepath)
 
 
 @dataclass(frozen=True, init=False)
 class ExcludeDirectoryRegex(IncludeDirectoryRegex):
-    """
-    Exclude directories with a specific regex
+    """Exclude directories with a specific regex.
 
     Opposite of `IncludeDirectoryRegex`. See `IncludeDirectoryRegex` for examples.
 
     Args:
         regex (str): Target directory regex.
     """
+
     def __call__(self, filepath: Path | str, /) -> bool:
         return not super().__call__(filepath)
 
 
 @dataclass(frozen=True, init=False)
 class ExcludeIfFileExists(IncludeIfFileExists):
-    """
-    Exclude files if they are in the same directory as a specific file
+    """Exclude files if they are in the same directory as a specific file.
 
     Opposite of `IncludeIfFileExists`. See `IncludeIfFileExists` for examples.
 
     Args:
         filename_pattern (str): Target file pattern.
     """
+
     def __call__(self, filepath: Path | str, /) -> bool:
         return not super().__call__(filepath)
