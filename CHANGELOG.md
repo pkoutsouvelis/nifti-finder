@@ -4,8 +4,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
-## [Unreleased]
-
 ## [2.0.0] - 2026-07-15
 ### Added
 - `FileFinder` — recommended entry point for file discovery with filters and
@@ -92,7 +90,6 @@ and this project adheres to [Semantic Versioning].
 [Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
-[Unreleased]: https://github.com/pkoutsouvelis/nifti-finder/compare/v2.0.0...HEAD
 [2.0.0]: https://github.com/pkoutsouvelis/nifti-finder/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/pkoutsouvelis/nifti-finder/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/pkoutsouvelis/nifti-finder/compare/v1.0.0...v1.1.0
