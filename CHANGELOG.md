@@ -6,6 +6,33 @@ and this project adheres to [Semantic Versioning].
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-07-15
+### Added
+- `FileFinder` — recommended entry point for file discovery with filters and
+  materialization helpers. Neuroimaging-friendly defaults (`patterns="*.nii*"`).
+- `RecursiveFileExplorer` — flat recursive glob primitive (replaces
+  `BasicFileExplorer`).
+- `NestedFileExplorer` — multi-level **directory** traversal with optional
+  progress tracking; file matching is always via `patterns`.
+- Deprecation of the `pattern` keyword in favour of `patterns` across explorers.
+
+### Changed
+- **Breaking:** Explorer API redesigned around composable primitives plus
+  `FileFinder` as the high-level class.
+- `NeuroExplorer` is now a deprecated shim over `FileFinder` with the legacy
+  `outer` / `inner` two-stage API only.
+- `AllPurposeFileExplorer` is deprecated; use `FileFinder` instead.
+- `BasicFileExplorer` → `RecursiveFileExplorer`; `TwoStageFileExplorer` →
+  `NestedFileExplorer`.
+- Package root export: `from nifti_finder import FileFinder`.
+
+### Deprecated
+- `NeuroExplorer`, `AllPurposeFileExplorer`, `BasicFileExplorer`,
+  `TwoStageFileExplorer` — use `FileFinder` or the new primitives instead.
+  Shims remain until **v2.2.0**.
+- Keyword argument `pattern` — use `patterns` instead. Support removed in
+  **v2.2.0**.
+
 ## [1.2.0] - 2026-05-12
 ### Added
 - New table-based filters in `nifti_finder.filters.extra_filters`:
@@ -65,7 +92,8 @@ and this project adheres to [Semantic Versioning].
 [Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
-[Unreleased]: https://github.com/pkoutsouvelis/nifti-finder/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/pkoutsouvelis/nifti-finder/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/pkoutsouvelis/nifti-finder/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/pkoutsouvelis/nifti-finder/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/pkoutsouvelis/nifti-finder/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/pkoutsouvelis/nifti-finder/releases/tag/v1.0.0

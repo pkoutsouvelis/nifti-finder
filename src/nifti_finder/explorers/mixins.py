@@ -54,7 +54,7 @@ class MaterializeMixin:
             unique (bool): Whether to de-duplicate the results. Defaults to False.
             limit (int, optional): The maximum number of results to return. Defaults to None.
             **scan_kw: Additional keyword arguments to pass to `scan()`;
-                e.g., `progress` for any `TwoStageFileExplorer`.
+                e.g., `progress` for any `NestedFileExplorer` or `FileFinder`.
         """
         root = resolve_path(root_dir)
         it = self.scan(root, **scan_kw)  # type: ignore[attr-defined]
@@ -76,7 +76,7 @@ class MaterializeMixin:
         Args:
             root_dir (Path | str): The root directory to materialize.
             **scan_kw: Additional keyword arguments to pass to `scan()`;
-                e.g., `progress` for any `TwoStageFileExplorer`.
+                e.g., `progress` for any `NestedFileExplorer` or `FileFinder`.
         """
         return next(self.scan(resolve_path(root_dir), **scan_kw), None)  # type: ignore[attr-defined]
 
@@ -97,7 +97,7 @@ class MaterializeMixin:
             root_dir (Path | str): The root directory to materialize.
             limit (int, optional): The maximum number of results to count. Defaults to None.
             **scan_kw: Additional keyword arguments to pass to `scan()`;
-                e.g., `progress` for any `TwoStageFileExplorer`.
+                e.g., `progress` for any `NestedFileExplorer` or `FileFinder`.
         """
         n = 0
         for _ in self.scan(resolve_path(root_dir), **scan_kw):  # type: ignore[attr-defined]
@@ -115,7 +115,7 @@ class MaterializeMixin:
             root_dir (Path | str): The root directory to materialize.
             size (int): The size of the batch.
             **scan_kw: Additional keyword arguments to pass to `scan()`;
-                e.g., `progress` for any `TwoStageFileExplorer`.
+                e.g., `progress` for any `NestedFileExplorer` or `FileFinder`.
         """
         batch: list[Path] = []
         for p in self.scan(resolve_path(root_dir), **scan_kw):  # type: ignore[attr-defined]

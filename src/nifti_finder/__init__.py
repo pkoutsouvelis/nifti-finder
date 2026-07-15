@@ -4,8 +4,9 @@ datasets and beyond."""
 from __future__ import annotations
 
 __all__ = [
-    "AllPurposeFileExplorer",
+    "FileFinder",
     "NeuroExplorer",
+    "AllPurposeFileExplorer",
 ]
 
 from .explorers import *
