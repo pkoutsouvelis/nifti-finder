@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
+## [2.0.1] - 2026-07-24
+### Added
+- `progress="auto"` for nested file discovery: tracks progress at the top
+  directory level when ``levels`` is set, and silently skips the progress bar
+  when ``levels`` is ``None``.
+
+### Changed
+- Default ``progress`` for `NestedFileExplorer` / `FileFinder` is now
+  ``"auto"`` (was ``False``). Pass ``progress=False`` to disable the bar.
+
 ## [2.0.0] - 2026-07-15
 ### Added
 - `FileFinder` — recommended entry point for file discovery with filters and
@@ -90,6 +100,7 @@ and this project adheres to [Semantic Versioning].
 [Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
+[2.0.1]: https://github.com/pkoutsouvelis/nifti-finder/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/pkoutsouvelis/nifti-finder/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/pkoutsouvelis/nifti-finder/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/pkoutsouvelis/nifti-finder/compare/v1.0.0...v1.1.0

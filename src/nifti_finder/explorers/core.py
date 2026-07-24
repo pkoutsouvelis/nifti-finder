@@ -129,6 +129,16 @@ class NestedFileExplorer(FileExplorer):
     >>> for path in explorer.scan("/path/to/dataset"):
     ...     preprocess(path)
     ```
+
+    D) Track progress automatically only when a top level exists:
+       - Default ``progress="auto"`` shows a bar when ``levels`` is set, and
+         silently does nothing otherwise.
+
+    ```python
+    >>> explorer = NestedFileExplorer(levels={"subjects": "sub-*"})
+    >>> for path in explorer.scan("/path/to/dataset"):  # progress="auto"
+    ...     preprocess(path)
+    ```
     """
 
     @deprecated_alias(old="pattern", new="patterns", since="2.0.0", remove_in="2.2.0")
@@ -164,15 +174,18 @@ class NestedFileExplorer(FileExplorer):
         root_dir: Path | str,
         /,
         *,
-        progress: bool = False,
+        progress: bool | str = "auto",
         **tqdm_kw,
     ) -> Iterator[Path]:
         """Scan a dataset with optional nested directory traversal.
 
         Args:
             root_dir (Path | str): The root directory to scan.
-            progress (bool): Whether to track progress over the first directory
-                level. Ignored when ``levels`` is ``None``.
+            progress (bool | str): Whether to track progress over the first
+                directory level. ``"auto"`` (default) tracks progress at the top
+                level if it exists, and silently does nothing when ``levels`` is
+                ``None``. ``True`` forces a progress bar (and warns if ``levels``
+                is ``None``); ``False`` disables it.
             **tqdm_kw: Additional keyword arguments to pass to ``tqdm``. Most
                 common are ``total`` and ``desc``.
         """
@@ -180,8 +193,14 @@ class NestedFileExplorer(FileExplorer):
         if not root.is_dir():
             raise NotADirectoryError(f"{root} is not a valid directory")
 
+        auto_progress = progress == "auto"
+        if isinstance(progress, str) and not auto_progress:
+            raise ValueError(
+                f"Invalid progress value {progress!r}; expected a bool or 'auto'."
+            )
+
         if self._levels is None:
-            if progress:
+            if progress is True:
                 warnings.warn(
                     "progress is ignored when levels is None; provide levels "
                     "with at least one directory stage to enable progress tracking.",
@@ -201,7 +220,8 @@ class NestedFileExplorer(FileExplorer):
             if p.is_dir()
         ]
 
-        if progress:
+        show_progress = progress is True or auto_progress
+        if show_progress:
             try:
                 from tqdm.auto import tqdm
 
@@ -359,15 +379,18 @@ class FileFinder(NestedFileExplorer, FilterableMixin, MaterializeMixin):
         root_dir: Path | str,
         /,
         *,
-        progress: bool = False,
+        progress: bool | str = "auto",
         **tqdm_kw,
     ) -> Iterator[Path]:
         """Scan a directory tree and yield paths matching the configured patterns.
 
         Args:
             root_dir (Path | str): The root directory to scan.
-            progress (bool): Whether to track progress over the first directory
-                level. Ignored when ``levels`` is ``None``.
+            progress (bool | str): Whether to track progress over the first
+                directory level. ``"auto"`` (default) tracks progress at the top
+                level if it exists, and silently does nothing when ``levels`` is
+                ``None``. ``True`` forces a progress bar (and warns if ``levels``
+                is ``None``); ``False`` disables it.
             **tqdm_kw: Additional keyword arguments to pass to ``tqdm``. Most
                 common are ``total`` and ``desc``.
         """

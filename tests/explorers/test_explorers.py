@@ -18,6 +18,24 @@ from nifti_finder.explorers import (
 from nifti_finder.filters import ExcludeDirectoryPrefix
 
 
+def _patch_tqdm(monkeypatch):
+    """Patch ``tqdm.auto.tqdm`` to record whether a progress bar was created.
+
+    Returns a list that is appended to once per ``tqdm`` invocation. The patched
+    ``tqdm`` still iterates transparently over the wrapped iterable.
+    """
+    calls: list = []
+
+    def fake_tqdm(iterable, *args, **kwargs):
+        calls.append(kwargs)
+        return iterable
+
+    import tqdm.auto
+
+    monkeypatch.setattr(tqdm.auto, "tqdm", fake_tqdm)
+    return calls
+
+
 class TestRecursiveFileExplorer:
     """
     Test `RecursiveFileExplorer`
@@ -193,6 +211,50 @@ class TestNestedFileExplorer:
     def test_levels_must_not_be_empty(self):
         with pytest.raises(ValueError, match="must not be empty"):
             NestedFileExplorer(levels={})
+
+    def test_progress_auto_with_levels(self, mock_datasets, monkeypatch):
+        calls = _patch_tqdm(monkeypatch)
+        explorer = NestedFileExplorer(
+            levels={"subjects": "sub-*"},
+            patterns="**/anat/*T1w.nii*",
+        )
+        paths = list(explorer.scan(mock_datasets["bids_root"], progress="auto"))
+        assert len(paths) == 5
+        assert len(calls) == 1
+
+    def test_progress_default_is_auto(self, mock_datasets, monkeypatch):
+        calls = _patch_tqdm(monkeypatch)
+        explorer = NestedFileExplorer(
+            levels={"subjects": "sub-*"},
+            patterns="**/anat/*T1w.nii*",
+        )
+        paths = list(explorer.scan(mock_datasets["bids_root"]))
+        assert len(paths) == 5
+        assert len(calls) == 1
+
+    def test_progress_false_disables_bar(self, mock_datasets, monkeypatch):
+        calls = _patch_tqdm(monkeypatch)
+        explorer = NestedFileExplorer(
+            levels={"subjects": "sub-*"},
+            patterns="**/anat/*T1w.nii*",
+        )
+        paths = list(explorer.scan(mock_datasets["bids_root"], progress=False))
+        assert len(paths) == 5
+        assert calls == []
+
+    def test_progress_auto_without_levels_is_silent(self, mock_datasets, monkeypatch):
+        calls = _patch_tqdm(monkeypatch)
+        explorer = NestedFileExplorer(patterns="*.nii*")
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            paths = list(explorer.scan(mock_datasets["bids_root"], progress="auto"))
+        assert len(paths) == 5
+        assert calls == []
+
+    def test_progress_invalid_value(self, mock_datasets):
+        explorer = NestedFileExplorer(levels={"subjects": "sub-*"})
+        with pytest.raises(ValueError, match="Invalid progress value"):
+            list(explorer.scan(mock_datasets["bids_root"], progress="yes"))
 
 
 class TestFileFinder:
